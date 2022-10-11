@@ -12,3 +12,5 @@ def kreisbogen(coords):
 
 
 def arcpoints(points):
+    print(points)
+
