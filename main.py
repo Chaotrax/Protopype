@@ -7,23 +7,29 @@ import pizzacut
 punktSammlung = list()
 
 
-def getinput():
+def get_input():
     usercheck = "y"
     print("Please add at least two points for identification")
     while usercheck == "y":
         print("Type your Coordinates")
         point = input("Format ( X Y direction distance): ").split()
-        point1 = pizzacut.Pizzacut(point[0], point[1], point[3], point[2])
-        punktSammlung.append(point1)
+        punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
         usercheck = input("Do you want to add another point? y/n:").lower()
     if len(punktSammlung) < 2:
         punktSammlung.clear()
         print("Zu wenig Punkte")
-        getinput()
+        get_input()
+    for i in punktSammlung:
+        print(i.coordinates)
+
+
+#  TODO
+def check_intersection():
+    print("placeholder")
 
 
 # Press the green button in the gutter to run the script.
-getinput()
-draw.draw()
+get_input()
+draw.draw()  # TODO
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
