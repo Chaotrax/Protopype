@@ -26,6 +26,9 @@ def get_input():
 
 #  TODO
 def check_intersection():
+    # POLYGONE aufstellen -> näherungsweise bestimmen über Segmente. (wieviele Segmente ist sinnvol? teil von
+    # pizzacut.py als funktion.
+    # xor nutzen für fuzzy angaben (schwankende angaben)
 
     print("placeholder")
 
