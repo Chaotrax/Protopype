@@ -13,7 +13,7 @@ def get_input():
     print("Please add at least two points for identification")
     while usercheck == "y":
         print("Type your Coordinates")
-        point = input("Format ( X Y direction distance): ").split()
+        point = clean_input(input("Format ( X Y direction distance): ").split())
         punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
         usercheck = input("Do you want to add another point? y/n:").lower()
     if len(punktSammlung) < 2:
@@ -24,8 +24,9 @@ def get_input():
         print(j.coordinates, j.shape)
 
 
-def clean_input():
-    return "hi"
+def clean_input(raw_input):
+    cleaned_input = raw_input
+    return cleaned_input
 
 
 #  TODO
