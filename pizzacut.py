@@ -13,21 +13,28 @@ def switcher_direction(d):
         "north": (-45, -135),
         "norden": (-45, -135),
         "nord": (-45, -135),
-        "ost": (-315, -45),
-        "osten": (-315, -45),
-        "east": (-315, -45),
+        "ost": (-315, -405),
+        "osten": (-315, -405),
+        "east": (-315, -405),
         "westen": (-135, -225),
         "west": (-135, -225)
     }
     return switcher.get(d.lower(), "keine Himmelsrichtung")
 
 
-def gen_newpoints(coordinates, radius, direction):
-    newpoints = ((coordinates[0] + radius * math.cos(direction[0] * math.pi/180), coordinates[1]
-                  + radius * math.sin(direction[0]*math.pi / 180)),
-                 (coordinates[0] + radius * math.cos(direction[1] * math.pi/180), coordinates[1]
-                  + radius * math.sin(direction[1]*math.pi / 180)))
-    return newpoints
+def approx_arc(coordinates, radius, direction):
+    # newpoints = ((coordinates[0] + radius * math.cos(direction[0] * math.pi/180), coordinates[1]
+    #               + radius * math.sin(direction[0]*math.pi / 180)),
+    #              (coordinates[0] + radius * math.cos(direction[1] * math.pi/180), coordinates[1]
+    #               + radius * math.sin(direction[1]*math.pi / 180)))
+    newpoints = [coordinates]
+    i = direction[0]
+    while i >= direction[1]:
+        newpoints.append((coordinates[0] + radius * math.cos(i * math.pi / 180), coordinates[1] + radius
+                          * math.sin(i * math.pi / 180)))
+        i += -10
+
+    return tuple(newpoints)
 
 
 class Pizzacut:
@@ -35,4 +42,4 @@ class Pizzacut:
         self.coordinates = (float(x), float(y))
         self.radius = float(r)
         self.direction = switcher_direction(d)
-        self.points = gen_newpoints(self.coordinates, self.radius, self.direction)
+        self.shape = approx_arc(self.coordinates, self.radius, self.direction)

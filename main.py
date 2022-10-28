@@ -20,21 +20,30 @@ def get_input():
         punktSammlung.clear()
         print("Zu wenig Punkte")
         get_input()
-    for i in punktSammlung:
-        print(i.coordinates)
+    for j in punktSammlung:
+        print(j.coordinates, j.shape)
+
+
+def clean_input():
+    return "hi"
 
 
 #  TODO
-def check_intersection():
+def check_intersection(subj, clip):
     # POLYGONE aufstellen -> näherungsweise bestimmen über Segmente. (wieviele Segmente ist sinnvol? teil von
     # pizzacut.py als funktion.
     # xor nutzen für fuzzy angaben (schwankende angaben)
-
-    print("placeholder")
+    pc = pyclipper.Pyclipper()
+    pc.AddPath(clip, pyclipper.PT_CLIP, True)
+    pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
+    return pc.Execute(pyclipper.CT_INTERSECTION, pyclipper.PFT_EVENODD, pyclipper.PFT_EVENODD)
 
 
 # Press the green button in the gutter to run the script.
 get_input()
+for i in range(len(punktSammlung) - 1):
+    print(check_intersection(punktSammlung[i].shape, punktSammlung[i + 1].shape))
 draw.draw()  # TODO
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
