@@ -40,3 +40,13 @@ class Pizzacut:
         self.radius = float(r)
         self.direction = switcher_direction(d)
         self.shape = approx_arc(self.coordinates, self.radius, self.direction)
+
+
+def approx_ellipse():
+
+    return 10
+
+
+class Between:
+    def __init__(self, p1, p2):
+        self.shape = approx_ellipse()
