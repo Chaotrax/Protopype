@@ -1,23 +1,20 @@
 import math
 
 
-# Norden, Westen, Süden, Osten
-himmelsRichtungen = ((-45, -135), (-135, -225), (-225, -315), (-315, -45))
-
-
+# Norden, Westen, Süden, Ostens
 def switcher_direction(d):
     switcher = {
-        "süd": (-225, -315),
-        "süden": (-225, -315),
-        "south": (-225, -315),
-        "north": (-45, -135),
-        "norden": (-45, -135),
-        "nord": (-45, -135),
-        "ost": (-315, -405),
-        "osten": (-315, -405),
-        "east": (-315, -405),
-        "westen": (-135, -225),
-        "west": (-135, -225)
+        "süd": (225, 315),
+        "süden": (225, 315),
+        "south": (225, 315),
+        "north": (45, 135),
+        "norden": (45, 135),
+        "nord": (45, 135),
+        "ost": (315, 405),
+        "osten": (315, 405),
+        "east": (315, 405),
+        "westen": (135, 225),
+        "west": (135, 225)
     }
     return switcher.get(d.lower(), "keine Himmelsrichtung")
 
@@ -29,10 +26,10 @@ def approx_arc(coordinates, radius, direction):
     #               + radius * math.sin(direction[1]*math.pi / 180)))
     newpoints = [coordinates]
     i = direction[0]
-    while i >= direction[1]:
+    while i <= direction[1]:
         newpoints.append((coordinates[0] + radius * math.cos(i * math.pi / 180), coordinates[1] + radius
                           * math.sin(i * math.pi / 180)))
-        i += -10
+        i += 10
 
     return tuple(newpoints)
 
