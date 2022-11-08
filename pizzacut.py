@@ -41,6 +41,9 @@ class Pizzacut:
         self.direction = switcher_direction(d)
         self.shape = approx_arc(self.coordinates, self.radius, self.direction)
 
+    def __print__(self):
+        print("nüsch")
+
 
 def approx_ellipse():
 
