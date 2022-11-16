@@ -29,7 +29,7 @@ def approx_arc(coordinates, radius, direction):
     while i <= direction[1]:
         newpoints.append((coordinates[0] + radius * math.cos(i * math.pi / 180), coordinates[1] + radius
                           * math.sin(i * math.pi / 180)))
-        i += 10
+        i += 5
 
     return tuple(newpoints)
 
@@ -41,15 +41,31 @@ class Pizzacut:
         self.direction = switcher_direction(d)
         self.shape = approx_arc(self.coordinates, self.radius, self.direction)
 
-    def __print__(self):
+    @staticmethod
+    def __print__():
         print("nüsch")
 
 
-def approx_ellipse():
+def get_angle(p1, p2):
+    angle = 0
+    return angle
 
-    return 10
+
+def approx_ellipse(p1, p2):
+    new_radius = math.sqrt(math.pow((p2[0] - p1[0]), 2) + math.pow((p2[1] - p1[1]), 2))
+    list_ell = list()
+    i = 0
+    while i < new_radius:
+        list_ell.append(0.5 * (new_radius - 4 * math.sqrt(3 * math.pow(new_radius, 2) + 4 * new_radius * i
+                                                          - 4 * math.pow(i, 2))))
+        i += 1
+    while i > 0:
+        list_ell.append(0.5 * (new_radius + 4 * math.sqrt(3 * math.pow(new_radius, 2) + 4 * new_radius * i
+                                                          - 4 * math.pow(i, 2))))
+        i -= 1
+    return list_ell
 
 
 class Between:
     def __init__(self, p1, p2):
-        self.shape = approx_ellipse()
+        self.shape = approx_ellipse(p1, p2)
