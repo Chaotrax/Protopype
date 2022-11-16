@@ -10,25 +10,42 @@ import pizzacut
 punktSammlung = list()
 
 
+# def get_input():
+#     usercheck = "y"
+#     print("Please add at least two points for identification")
+#     while usercheck == "y":
+#         print("Type your Coordinates")
+#         point = clean_input(input("Format ( X Y direction distance): ").split())
+#         punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
+#         usercheck = input("Do you want to add another point? y/n:").lower()
+#     if len(punktSammlung) < 2:
+#         punktSammlung.clear()
+#         print("Zu wenig Punkte")
+#         get_input()
+#     for j in punktSammlung:
+#         print(j.coordinates, j.shape)
+
+
 def get_input():
     usercheck = "y"
     print("Please add at least two points for identification")
     while usercheck == "y":
-        print("Type your Coordinates")
-        point = clean_input(input("Format ( X Y direction distance): ").split())
-        punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
-        usercheck = input("Do you want to add another point? y/n:").lower()
+        decision = input("Please choose between distance and between. d / b: ")
+        if decision == "b":
+            point1 = input("Please add Point 1: X Y").split()
+            point2 = input("Please add Point 2: X Y").split()
+            punktSammlung.append(pizzacut.Between(point1, point2))
+        elif decision == "d":
+            print("Type your Coordinates")
+            point = input("Format ( X Y direction distance): ").split()
+            punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
+        usercheck = input("Do you want to add another Variable? y/n:").lower()
     if len(punktSammlung) < 2:
         punktSammlung.clear()
         print("Zu wenig Punkte")
         get_input()
     for j in punktSammlung:
         print(j.coordinates, j.shape)
-
-
-def clean_input(raw_input):
-    cleaned_input = raw_input
-    return cleaned_input
 
 
 def check_intersection(subj, clip):

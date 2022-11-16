@@ -55,17 +55,17 @@ def rot_ell(sh_ell, angle):
 
 
 def approx_ellipse(pt1, pt2):
-    new_radius = sympy.sqrt((pt2[0] - pt1[0])**2 + (pt2[1] - pt1[1])**2)
+    new_radius = sympy.sqrt((pt2[0] - pt1[0]) ** 2 + (pt2[1] - pt1[1]) ** 2)
     angle = (360 - sympy.asin((pt1[1] - pt2[1]) / new_radius)) * sympy.pi / 180
     list_ell = list()
     i = 0
     while i < new_radius:
-        list_ell.append((pt1[0] + i, 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius**2 + 4 * new_radius * i
-                                                                        - 4 * i**2))))
+        list_ell.append((pt1[0] + i, 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius ** 2 + 4 * new_radius * i
+                                                                        - 4 * i ** 2))))
         i += 1
     while i > 0:
-        list_ell.append((pt1[0] + i, 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius**2 + 4 * new_radius * i
-                                                                        - 4 * i**2))))
+        list_ell.append((pt1[0] + i, 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius ** 2 + 4 * new_radius * i
+                                                                        - 4 * i ** 2))))
         i -= 1
 
     return rot_ell(list_ell, angle)
@@ -73,4 +73,7 @@ def approx_ellipse(pt1, pt2):
 
 class Between:
     def __init__(self, p1, p2):
-        self.shape = approx_ellipse(p1, p2)
+        self.c1 = (float(p1[0]), float(p1[1]))
+        self.c2 = (float(p2[0]), float(p2[1]))
+        self.shape = approx_ellipse(self.c1, self.c2)
+
