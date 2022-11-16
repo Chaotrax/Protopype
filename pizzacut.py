@@ -1,4 +1,4 @@
-import math
+import sympy
 
 
 # Norden, Westen, Süden, Ostens
@@ -20,15 +20,15 @@ def switcher_direction(d):
 
 
 def approx_arc(coordinates, radius, direction):
-    # newpoints = ((coordinates[0] + radius * math.cos(direction[0] * math.pi/180), coordinates[1]
-    #               + radius * math.sin(direction[0]*math.pi / 180)),
-    #              (coordinates[0] + radius * math.cos(direction[1] * math.pi/180), coordinates[1]
-    #               + radius * math.sin(direction[1]*math.pi / 180)))
+    # newpoints = ((coordinates[0] + radius * sympy.cos(direction[0] * sympy.pi/180), coordinates[1]
+    #               + radius * sympy.sin(direction[0]*sympy.pi / 180)),
+    #              (coordinates[0] + radius * sympy.cos(direction[1] * sympy.pi/180), coordinates[1]
+    #               + radius * sympy.sin(direction[1]*sympy.pi / 180)))
     newpoints = [coordinates]
     i = direction[0]
     while i <= direction[1]:
-        newpoints.append((coordinates[0] + radius * math.cos(i * math.pi / 180), coordinates[1] + radius
-                          * math.sin(i * math.pi / 180)))
+        newpoints.append((coordinates[0] + radius * sympy.cos(i * sympy.pi / 180), coordinates[1] + radius
+                          * sympy.sin(i * sympy.pi / 180)))
         i += 5
 
     return tuple(newpoints)
@@ -46,24 +46,29 @@ class Pizzacut:
         print("nüsch")
 
 
-def get_angle(p1, p2):
-    angle = 0
-    return angle
+def rot_ell(sh_ell, angle):
+    newsh_ell = list()
+    for i in sh_ell:
+        newsh_ell.append((i[0] * sympy.cos(angle) - i[1] * sympy.sin(angle), i[0] * sympy.sin(angle) + i[1]
+                          * sympy.cos(angle)))
+    return newsh_ell
 
 
-def approx_ellipse(p1, p2):
-    new_radius = math.sqrt(math.pow((p2[0] - p1[0]), 2) + math.pow((p2[1] - p1[1]), 2))
+def approx_ellipse(pt1, pt2):
+    new_radius = sympy.sqrt((pt2[0] - pt1[0])**2 + (pt2[1] - pt1[1])**2)
+    angle = (360 - sympy.asin((pt1[1] - pt2[1]) / new_radius)) * sympy.pi / 180
     list_ell = list()
     i = 0
     while i < new_radius:
-        list_ell.append(0.5 * (new_radius - 4 * math.sqrt(3 * math.pow(new_radius, 2) + 4 * new_radius * i
-                                                          - 4 * math.pow(i, 2))))
+        list_ell.append((pt1[0] + i, 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius**2 + 4 * new_radius * i
+                                                                        - 4 * i**2))))
         i += 1
     while i > 0:
-        list_ell.append(0.5 * (new_radius + 4 * math.sqrt(3 * math.pow(new_radius, 2) + 4 * new_radius * i
-                                                          - 4 * math.pow(i, 2))))
+        list_ell.append((pt1[0] + i, 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius**2 + 4 * new_radius * i
+                                                                        - 4 * i**2))))
         i -= 1
-    return list_ell
+
+    return rot_ell(list_ell, angle)
 
 
 class Between:
