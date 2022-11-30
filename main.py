@@ -1,23 +1,29 @@
-# This is a sample Python script.
 # Press Umschalt+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+
 import draw
 import pyclipper
 from pyclipper import scale_from_clipper
 from pyclipper import scale_to_clipper
 import pizzacut
 
-punktSammlung = list()
+
+shapeList = list()
 
 
 # def get_input():
 #     usercheck = "y"
 #     print("Please add at least two points for identification")
 #     while usercheck == "y":
-#         print("Type your Coordinates")
-#         point = clean_input(input("Format ( X Y direction distance): ").split())
-#         punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
-#         usercheck = input("Do you want to add another point? y/n:").lower()
+#         decision = input("Please choose between distance and between. d / b: ")
+#         if decision == "b":
+#             point1 = input("Please add Point 1: X Y").split()
+#             point2 = input("Please add Point 2: X Y").split()
+#             punktSammlung.append(pizzacut.Between(point1, point2))
+#         elif decision == "d":
+#             print("Type your Coordinates")
+#             point = input("Format ( X Y direction distance): ").split()
+#             punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
+#         usercheck = input("Do you want to add another Variable? y/n:").lower()
 #     if len(punktSammlung) < 2:
 #         punktSammlung.clear()
 #         print("Zu wenig Punkte")
@@ -25,27 +31,23 @@ punktSammlung = list()
 #     for j in punktSammlung:
 #         print(j.coordinates, j.shape)
 
-
 def get_input():
     usercheck = "y"
-    print("Please add at least two points for identification")
+    print("Please add at least two Shapes for identification ")
     while usercheck == "y":
-        decision = input("Please choose between distance and between. d / b: ")
-        if decision == "b":
-            point1 = input("Please add Point 1: X Y").split()
-            point2 = input("Please add Point 2: X Y").split()
-            punktSammlung.append(pizzacut.Between(point1, point2))
-        elif decision == "d":
-            print("Type your Coordinates")
-            point = input("Format ( X Y direction distance): ").split()
-            punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
-        usercheck = input("Do you want to add another Variable? y/n:").lower()
-    if len(punktSammlung) < 2:
-        punktSammlung.clear()
-        print("Zu wenig Punkte")
+        point = input("Please add your coordinates (X Y): ").split()
+        if input("Distance or Between? (d/b): ") == "b":
+            s_point = input("Please add the second Point (X Y): ").split()
+            shapeList.append(pizzacut.Between(point, s_point))
+            print(shapeList[-1].shape)
+        else:
+            dis_dir = input("Please specify Distance and Direction from your chosen Point: (Distance Quarter)").split()
+            shapeList.append(pizzacut.Pizzacut(point[0], point[1], dis_dir[0], dis_dir[1]))
+        usercheck = input("Do you want to add another Shape? y/n: ")
+    if len(shapeList) < 2:
+        shapeList.clear()
+        print("Zu wenig Punkte!")
         get_input()
-    for j in punktSammlung:
-        print(j.coordinates, j.shape)
 
 
 def check_intersection(subj, clip):
@@ -55,14 +57,15 @@ def check_intersection(subj, clip):
     pc = pyclipper.Pyclipper()
     pc.AddPath(scale_to_clipper(clip), pyclipper.PT_CLIP, True)
     pc.AddPath(scale_to_clipper(subj), pyclipper.PT_SUBJECT, True)
+    print("test")
     return scale_from_clipper(pc.Execute(pyclipper.CT_INTERSECTION, pyclipper.PFT_POSITIVE, pyclipper.PFT_POSITIVE))
 
 
-# Press the green button in the gutter to run the script.
 get_input()
-for i in range(len(punktSammlung) - 1):
-    print("Schnittfläche: " + check_intersection(punktSammlung[i].shape, punktSammlung[i + 1].shape))
+schnittflache = check_intersection(shapeList[-1].shape, shapeList[0].shape)
+# for i in range(len(shapeList) - 1):
+#     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
+print(schnittflache)
 draw.draw()  # TODO
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
