@@ -66,6 +66,6 @@ schnittflache = check_intersection(shapeList[-1].shape, shapeList[0].shape)
 # for i in range(len(shapeList) - 1):
 #     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
 print(schnittflache)
-draw.draw()  # TODO
+draw.draw(schnittflache)  # TODO
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
