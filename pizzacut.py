@@ -1,4 +1,6 @@
+import geopandas
 import sympy
+from shapely import Polygon
 
 #
 # def approx_arc(coordinates, radius, direction):
@@ -62,6 +64,7 @@ import sympy
 #         self.shape = approx_ellipse(self.c1, self.c2)
 
 # Norden, Westen, Süden, Ostens
+
 def switcher_direction(d):
     switcher = {
         "süd": (225, 315),
@@ -85,13 +88,17 @@ class DistanceObject:
         self.path = None
         self.shape = None
 
+    def set_shape(self):
+        return geopandas.GeoSeries(data=Polygon(self.path))
+
 
 class Distance(DistanceObject):
     def __init__(self, points: tuple, radius: float, direction):
         super().__init__(points)
-        self.path = self.approx_arc()
-        self.radius = radius
         self.direction = switcher_direction(direction)
+        self.radius = radius
+        self.path = self.approx_arc()
+        self.shape = self.set_shape()
 
     def approx_arc(self):
         newpoints = [self.coordinates]
@@ -106,20 +113,23 @@ class Distance(DistanceObject):
 class Between(DistanceObject):
     def __init__(self, points: tuple):
         super().__init__(points)
+        self.formel = None
         self.path = self.approx_ellipse()
+        self.shape = self.set_shape()
 
     def approx_ellipse(self):
         new_radius = sympy.sqrt((self.coordinates[1][0] - self.coordinates[0][0]) ** 2 + (self.coordinates[1][1]
                                 - self.coordinates[0][1]) ** 2)
         angle = (360 - sympy.asin((self.coordinates[0][1] - self.coordinates[1][1]) / new_radius)) * sympy.pi / 180
-        list_ell = [self.coordinates[0]]
+        list_ell = list()
+        list_ell.append((self.coordinates[0][0], self.coordinates[0][1]))
         # schleife bearbeiten
         i = 0
         while i < new_radius:
             list_ell.append((self.coordinates[0][0] + i, 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius ** 2 + 4
                             * new_radius * i - 4 * i ** 2))))
             i += 1
-        list_ell.append(list(self.coordinates[1]))
+        list_ell.append((self.coordinates[1][0], self.coordinates[1][1]))
         while i > 0:
             list_ell.append((self.coordinates[0][0] + i, 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius ** 2 + 4
                             * new_radius * i - 4 * i ** 2))))
@@ -132,4 +142,8 @@ class Between(DistanceObject):
         for i in sh_ell:
             newsh_ell.append((i[0] * sympy.cos(angle) - i[1] * sympy.sin(angle), i[0] * sympy.sin(angle) + i[1]
                               * sympy.cos(angle)))
-        return newsh_ell
+        return tuple(newsh_ell)
+
+# TODO
+# geodataframe aus allen geoseries erzeugen um zu geojson auszugeben und an draw zu übergeben
+# intersection objekt anlegen das als property path die coord kriegt - child element von distanceObjekt

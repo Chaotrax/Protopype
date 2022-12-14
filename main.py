@@ -47,12 +47,12 @@ def get_input():
         if input("Distance or Between? (d/b): ") == "b":
             for i in input("Please add the second Point (X Y): ").split():
                 point.append(i)
-            shapeList.append(splitnfloat(point, "e"))
+            shapeList.append(splitnfloat(tuple(point), "e"))
             print(shapeList[-1].path)
         else:
             for i in input("Please specify Distance and Direction from your chosen Point: (Distance Quarter)").split():
                 point.append(i)
-            shapeList.append(splitnfloat(point, "d"))
+            shapeList.append(splitnfloat(tuple(point), "d"))
         usercheck = input("Do you want to add another Shape? y/n: ")
     if len(shapeList) < 2:
         shapeList.clear()
