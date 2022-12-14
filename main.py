@@ -31,18 +31,28 @@ shapeList = list()
 #     for j in punktSammlung:
 #         print(j.coordinates, j.shape)
 
+
+def splitnfloat(textin, typ):
+    if typ == "e":
+        return pizzacut.Between(((float(textin[0]), float(textin[1])), (float(textin[2]), float(textin[3]))))
+    else:
+        return pizzacut.Distance((float(textin[0]), float(textin[1])), float(textin[2]), textin[3])
+
+
 def get_input():
     usercheck = "y"
     print("Please add at least two Shapes for identification ")
     while usercheck == "y":
         point = input("Please add your coordinates (X Y): ").split()
         if input("Distance or Between? (d/b): ") == "b":
-            s_point = input("Please add the second Point (X Y): ").split()
-            shapeList.append(pizzacut.Between(point, s_point))
-            print(shapeList[-1].shape)
+            for i in input("Please add the second Point (X Y): ").split():
+                point.append(i)
+            shapeList.append(splitnfloat(point, "e"))
+            print(shapeList[-1].path)
         else:
-            dis_dir = input("Please specify Distance and Direction from your chosen Point: (Distance Quarter)").split()
-            shapeList.append(pizzacut.Pizzacut(point[0], point[1], dis_dir[0], dis_dir[1]))
+            for i in input("Please specify Distance and Direction from your chosen Point: (Distance Quarter)").split():
+                point.append(i)
+            shapeList.append(splitnfloat(point, "d"))
         usercheck = input("Do you want to add another Shape? y/n: ")
     if len(shapeList) < 2:
         shapeList.clear()

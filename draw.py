@@ -1,8 +1,14 @@
 # script that draws the circles
-import plotly
+# ich brauche: alle shapes, koordinaten in latlng, map
+
+
+import plotly as px
 import numpy as np
 
 
 # Draw my sh&t
-def draw(points):
-    print("hi")
+def draw(points: list):
+    print("ji")
+    px.line_geo()
+
+
