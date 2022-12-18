@@ -1,7 +1,6 @@
 import geopandas
 import sympy
 from shapely import Polygon
-
 #
 # def approx_arc(coordinates, radius, direction):
 #     # newpoints = ((coordinates[0] + radius * sympy.cos(direction[0] * sympy.pi/180), coordinates[1]
@@ -64,6 +63,12 @@ from shapely import Polygon
 #         self.shape = approx_ellipse(self.c1, self.c2)
 
 # Norden, Westen, Süden, Ostens
+def create_gdf(geolist: tuple):
+    gs = geolist[0]
+    for i in range(len(geolist)):
+        gs.append(geolist[i+1])
+    geopandas.GeoDataFrame(geometry=gs).plot()
+
 
 def switcher_direction(d):
     switcher = {
@@ -82,9 +87,27 @@ def switcher_direction(d):
     return switcher.get(d.lower(), "keine Himmelsrichtung")
 
 
+def switcher_direction_alt(d):
+    switcher = {
+        "süd": (135, 225),
+        "süden": (135, 225),
+        "south": (135, 225),
+        "north": (-45, 45),
+        "norden": (-45, 45),
+        "nord": (-45, 45),
+        "ost": (45, 135),
+        "osten": (45, 135),
+        "east": (45, 135),
+        "westen": (225, 315),
+        "west": (225, 315)
+    }
+    return switcher.get(d.lower(), "keine Himmelsrichtung")
+
+
 class DistanceObject:
     def __init__(self, points: tuple):
         self.coordinates = points
+        self.coordinates_latlon = None
         self.path = None
         self.shape = None
 
@@ -96,8 +119,10 @@ class Distance(DistanceObject):
     def __init__(self, points: tuple, radius: float, direction):
         super().__init__(points)
         self.direction = switcher_direction(direction)
+        self.direction_mar = switcher_direction_alt(direction)
         self.radius = radius
         self.path = self.approx_arc()
+        self.path_latlng = self.approx_arc_maritim()
         self.shape = self.set_shape()
 
     def approx_arc(self):
@@ -106,6 +131,26 @@ class Distance(DistanceObject):
         while i <= self.direction[1]:
             newpoints.append((self.coordinates[0] + self.radius * sympy.cos(i * sympy.pi / 180), self.coordinates[1]
                               + self.radius * sympy.sin(i * sympy.pi / 180)))
+            i += 5
+        return tuple(newpoints)
+
+    def approx_arc_maritim(self):
+        # ToDo
+        # Erdradius, Latlng - Radia
+        newpoints = [self.coordinates]
+        i = self.direction_mar[0]
+        # latitude = y longitude = x
+        while i <= self.direction_mar[1]:
+            la = sympy.asin(sympy.sin(self.coordinates[1] * sympy.pi / 180) + sympy.cos(self.radius / 6378)
+                            + sympy.cos(self.coordinates[1] * sympy.pi / 180) * sympy.sin(self. radius / 6378)
+                            * sympy.cos(self.direction_mar * sympy.pi / 180))
+            lo = self.coordinates[0] * sympy.pi / 180 + sympy.atan2(sympy.cos(self.radius / 6387) -
+                                                                    sympy.sin(self.coordinates[1] * sympy.pi / 180)
+                                                                    * sympy.sin(la * sympy.pi / 180),
+                                                                    sympy.sin(self.direction_mar * sympy.pi / 180)
+                                                                    * sympy.sin(self.radius / 6378)
+                                                                    * sympy.cos(self.coordinates[0] * sympy.pi / 180))
+            newpoints.append((lo, la))
             i += 5
         return tuple(newpoints)
 

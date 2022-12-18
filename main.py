@@ -72,10 +72,14 @@ def check_intersection(subj, clip):
 
 
 get_input()
-schnittflache = check_intersection(shapeList[-1].shape, shapeList[0].shape)
+schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
 # for i in range(len(shapeList) - 1):
 #     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
 print(schnittflache)
+geolist = list()
+for i in shapeList:
+    geolist.append(i.shape)
+pizzacut.create_gdf(tuple(geolist))
 draw.draw(schnittflache)  # TODO
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
