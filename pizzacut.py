@@ -1,68 +1,9 @@
 import geopandas
 import sympy
+import utm as utm_lib
 from shapely import Polygon
-#
-# def approx_arc(coordinates, radius, direction):
-#     # newpoints = ((coordinates[0] + radius * sympy.cos(direction[0] * sympy.pi/180), coordinates[1]
-#     #               + radius * sympy.sin(direction[0]*sympy.pi / 180)),
-#     #              (coordinates[0] + radius * sympy.cos(direction[1] * sympy.pi/180), coordinates[1]
-#     #               + radius * sympy.sin(direction[1]*sympy.pi / 180)))
-#     newpoints = [coordinates]
-#     i = direction[0]
-#     while i <= direction[1]:
-#         newpoints.append((coordinates[0] + radius * sympy.cos(i * sympy.pi / 180), coordinates[1] + radius
-#                           * sympy.sin(i * sympy.pi / 180)))
-#         i += 5
-#
-#     return tuple(newpoints)
 
 
-# class Pizzacut:
-#     def __init__(self, x, y, r, d):
-#         self.coordinates = (float(x), float(y))
-#         self.radius = float(r)
-#         self.direction = switcher_direction(d)
-#         self.shape = approx_arc(self.coordinates, self.radius, self.direction)
-#
-#     @staticmethod
-#     def __print__():
-#         print("nüsch")
-
-
-# def rot_ell(sh_ell, angle):
-#     newsh_ell = list()
-#     for i in sh_ell:
-#         newsh_ell.append((i[0] * sympy.cos(angle) - i[1] * sympy.sin(angle), i[0] * sympy.sin(angle) + i[1]
-#                           * sympy.cos(angle)))
-#     return newsh_ell
-
-
-# def approx_ellipse(pt1, pt2):
-#     new_radius = sympy.sqrt((pt2[0] - pt1[0]) ** 2 + (pt2[1] - pt1[1]) ** 2)
-#     angle = (360 - sympy.asin((pt1[1] - pt2[1]) / new_radius)) * sympy.pi / 180
-#     list_ell = [pt1]
-#     # schleife bearbeiten
-#     i = 0
-#     while i < new_radius:
-#         list_ell.append((pt1[0] + i, 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius ** 2 + 4 * new_radius * i
-#                                                                         - 4 * i ** 2))))
-#         i += 1
-#     list_ell.append(pt2)
-#     while i > 0:
-#         list_ell.append((pt1[0] + i, 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius ** 2 + 4 * new_radius * i
-#                                                                         - 4 * i ** 2))))
-#         i -= 1
-#     list_ell = list(dict.fromkeys(list_ell))
-#     return rot_ell(list_ell, angle)
-
-
-# class Between:
-#     def __init__(self, p1, p2):
-#         self.c1 = (float(p1[0]), float(p1[1]))
-#         self.c2 = (float(p2[0]), float(p2[1]))
-#         self.shape = approx_ellipse(self.c1, self.c2)
-
-# Norden, Westen, Süden, Ostens
 def create_gdf(geolist: tuple):
     gs = geolist[0]
     for i in range(len(geolist)):
@@ -87,25 +28,8 @@ def switcher_direction(d):
     return switcher.get(d.lower(), "keine Himmelsrichtung")
 
 
-def switcher_direction_alt(d):
-    switcher = {
-        "süd": (135, 225),
-        "süden": (135, 225),
-        "south": (135, 225),
-        "north": (-45, 45),
-        "norden": (-45, 45),
-        "nord": (-45, 45),
-        "ost": (45, 135),
-        "osten": (45, 135),
-        "east": (45, 135),
-        "westen": (225, 315),
-        "west": (225, 315)
-    }
-    return switcher.get(d.lower(), "keine Himmelsrichtung")
-
-
 class DistanceObject:
-    def __init__(self, points: tuple):
+    def __init__(self, points):
         self.coordinates = points
         self.coordinates_latlon = None
         self.path = None
@@ -119,10 +43,8 @@ class Distance(DistanceObject):
     def __init__(self, points: tuple, radius: float, direction):
         super().__init__(points)
         self.direction = switcher_direction(direction)
-        self.direction_mar = switcher_direction_alt(direction)
         self.radius = radius
         self.path = self.approx_arc()
-        self.path_latlng = self.approx_arc_maritim()
         self.shape = self.set_shape()
 
     def approx_arc(self):
@@ -131,26 +53,6 @@ class Distance(DistanceObject):
         while i <= self.direction[1]:
             newpoints.append((self.coordinates[0] + self.radius * sympy.cos(i * sympy.pi / 180), self.coordinates[1]
                               + self.radius * sympy.sin(i * sympy.pi / 180)))
-            i += 5
-        return tuple(newpoints)
-
-    def approx_arc_maritim(self):
-        # ToDo
-        # Erdradius, Latlng - Radia
-        newpoints = [self.coordinates]
-        i = self.direction_mar[0]
-        # latitude = y longitude = x
-        while i <= self.direction_mar[1]:
-            la = sympy.asin(sympy.sin(self.coordinates[1] * sympy.pi / 180) + sympy.cos(self.radius / 6378)
-                            + sympy.cos(self.coordinates[1] * sympy.pi / 180) * sympy.sin(self. radius / 6378)
-                            * sympy.cos(self.direction_mar * sympy.pi / 180))
-            lo = self.coordinates[0] * sympy.pi / 180 + sympy.atan2(sympy.cos(self.radius / 6387) -
-                                                                    sympy.sin(self.coordinates[1] * sympy.pi / 180)
-                                                                    * sympy.sin(la * sympy.pi / 180),
-                                                                    sympy.sin(self.direction_mar * sympy.pi / 180)
-                                                                    * sympy.sin(self.radius / 6378)
-                                                                    * sympy.cos(self.coordinates[0] * sympy.pi / 180))
-            newpoints.append((lo, la))
             i += 5
         return tuple(newpoints)
 
@@ -189,6 +91,33 @@ class Between(DistanceObject):
                               * sympy.cos(angle)))
         return tuple(newsh_ell)
 
-# TODO
-# geodataframe aus allen geoseries erzeugen um zu geojson auszugeben und an draw zu übergeben
-# intersection objekt anlegen das als property path die coord kriegt - child element von distanceObjekt
+
+class Place:
+    def __init__(self, coordinate_input):
+        self.input_coordsystem = self.check_coordsystem(coordinate_input)
+        self.utm = self.process_utm(coordinate_input)
+        self.latlng = self.process_latlng(coordinate_input)
+
+    def check_coordsystem(self, coordinate_input):
+        if len(coordinate_input) > 2:
+            return "utm"
+        else:
+            return "latlng"
+
+    def process_utm(self, coordinate_input):
+        if self.input_coordsystem == "utm":
+            return {"easting": coordinate_input[0], "northing": coordinate_input[1], "zone_numb": coordinate_input[3],
+                    "zone_let": coordinate_input[4]}
+        else:
+            conv = utm_lib.from_latlon(coordinate_input[0], coordinate_input[1])
+            return {"easting": conv[0], "northing": conv[1], "zone_numb": conv[3], "zone_let": conv[4]}
+
+    def process_latlng(self, coordinate_input):
+        if self.input_coordsystem == "latlng":
+            return {"latitude": coordinate_input[0], "longitude": coordinate_input[1]}
+        else:
+            conv = utm_lib.to_latlon(coordinate_input[0], coordinate_input[1], coordinate_input[2], coordinate_input[3])
+            return {"latitude": conv[0], "longitude": conv[1]}
+
+
+# TODO: use place instead of tuples

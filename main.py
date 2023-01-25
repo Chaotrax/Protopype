@@ -50,7 +50,8 @@ def get_input():
             shapeList.append(splitnfloat(tuple(point), "e"))
             print(shapeList[-1].path)
         else:
-            for i in input("Please specify Distance and Direction from your chosen Point: (Distance Quarter)").split():
+            for i in input("Please specify Distance in Kilometers"
+                           " and Direction from your chosen Point: (Distance Quarter)").split():
                 point.append(i)
             shapeList.append(splitnfloat(tuple(point), "d"))
         usercheck = input("Do you want to add another Shape? y/n: ")
@@ -83,3 +84,6 @@ pizzacut.create_gdf(tuple(geolist))
 draw.draw(schnittflache)  # TODO
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
+# TODO
+# Koordinatenübertragung in UTM für Berechnungen. Umwandlung in UTM
+# zurück in Latlng für ausgabe
