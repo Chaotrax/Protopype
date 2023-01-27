@@ -7,7 +7,7 @@ from shapely import Polygon
 def create_gdf(geolist: tuple):
     gs = geolist[0]
     for i in range(len(geolist)):
-        gs.append(geolist[i+1])
+        gs.append(geolist[i + 1])
     geopandas.GeoDataFrame(geometry=gs).plot()
 
 
@@ -40,7 +40,7 @@ class DistanceObject:
 
 
 class Distance(DistanceObject):
-    def __init__(self, points: tuple, radius: float, direction):
+    def __init__(self, points, radius: float, direction):
         super().__init__(points)
         self.direction = switcher_direction(direction)
         self.radius = radius
@@ -48,17 +48,23 @@ class Distance(DistanceObject):
         self.shape = self.set_shape()
 
     def approx_arc(self):
-        newpoints = [self.coordinates]
+        newpoints = [(self.coordinates.latlng["latitude"], self.coordinates.latlng["longitude"]), ]
         i = self.direction[0]
         while i <= self.direction[1]:
-            newpoints.append((self.coordinates[0] + self.radius * sympy.cos(i * sympy.pi / 180), self.coordinates[1]
-                              + self.radius * sympy.sin(i * sympy.pi / 180)))
+            newpoints.append(
+                utm_lib.to_latlon(self.coordinates.utm["easting"] + self.radius * sympy.cos(i * sympy.pi / 180),
+                                  self.coordinates.utm["northing"]
+                                  + self.radius * sympy.sin(i * sympy.pi / 180), self.coordinates.utm["zone_numb"],
+                                  self.coordinates.utm["zone_let"]))
             i += 5
         return tuple(newpoints)
 
 
+# TODO
+
+
 class Between(DistanceObject):
-    def __init__(self, points: tuple):
+    def __init__(self, points):
         super().__init__(points)
         self.formel = None
         self.path = self.approx_ellipse()
@@ -66,7 +72,8 @@ class Between(DistanceObject):
 
     def approx_ellipse(self):
         new_radius = sympy.sqrt((self.coordinates[1][0] - self.coordinates[0][0]) ** 2 + (self.coordinates[1][1]
-                                - self.coordinates[0][1]) ** 2)
+                                                                                          - self.coordinates[0][
+                                                                                              1]) ** 2)
         angle = (360 - sympy.asin((self.coordinates[0][1] - self.coordinates[1][1]) / new_radius)) * sympy.pi / 180
         list_ell = list()
         list_ell.append((self.coordinates[0][0], self.coordinates[0][1]))
@@ -74,12 +81,12 @@ class Between(DistanceObject):
         i = 0
         while i < new_radius:
             list_ell.append((self.coordinates[0][0] + i, 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius ** 2 + 4
-                            * new_radius * i - 4 * i ** 2))))
+                                                                                            * new_radius * i - 4 * i ** 2))))
             i += 1
         list_ell.append((self.coordinates[1][0], self.coordinates[1][1]))
         while i > 0:
             list_ell.append((self.coordinates[0][0] + i, 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius ** 2 + 4
-                            * new_radius * i - 4 * i ** 2))))
+                                                                                            * new_radius * i - 4 * i ** 2))))
             i -= 1
         list_ell = list(dict.fromkeys(list_ell))
         return self.rot_ell(list_ell, angle)
@@ -93,7 +100,8 @@ class Between(DistanceObject):
 
 
 class Place:
-    def __init__(self, coordinate_input):
+    def __init__(self, coordinate_input, name):
+        self.name = name
         self.input_coordsystem = self.check_coordsystem(coordinate_input)
         self.utm = self.process_utm(coordinate_input)
         self.latlng = self.process_latlng(coordinate_input)
@@ -118,6 +126,5 @@ class Place:
         else:
             conv = utm_lib.to_latlon(coordinate_input[0], coordinate_input[1], coordinate_input[2], coordinate_input[3])
             return {"latitude": conv[0], "longitude": conv[1]}
-
 
 # TODO: use place instead of tuples
