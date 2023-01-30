@@ -15,6 +15,8 @@ def floating(textin):
     while i < len(textin):
         if i < 2:
             point.append(float(textin[i]))
+        elif i == 2:
+            point.append(int(textin[i]))
         else:
             point.append(textin[i])
         i += 1
@@ -64,11 +66,12 @@ schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
 # for i in range(len(shapeList) - 1):
 #     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
 print(schnittflache)
-geolist = list()
-for i in shapeList:
-    geolist.append(i.shape)
-pizzacut.create_gdf(tuple(geolist))
-draw.draw(schnittflache)  # TODO
+draw.draw(shapeList)
+# geolist = list()
+# for i in shapeList:
+#     geolist.append(i.shape)
+# pizzacut.create_gdf(tuple(geolist))
+# draw.draw(schnittflache)  # TODO
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
 # TODO
