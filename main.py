@@ -74,6 +74,3 @@ draw.draw(shapeList)
 # draw.draw(schnittflache)  # TODO
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
-# TODO
-# Koordinatenübertragung in UTM für Berechnungen. Umwandlung in UTM
-# zurück in Latlng für ausgabe
