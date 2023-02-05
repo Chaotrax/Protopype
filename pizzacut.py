@@ -14,7 +14,7 @@ def latlon_conv(shapelist, zone, letter):
     newlist = []
     print(shapelist)
     for i in shapelist:
-        newlist.append(utm_lib.to_latlon(i[0], i[1], zone, letter))
+        newlist.append(utm_lib.to_latlon(int(i[0]), int(i[1]), zone, letter))
     return tuple(newlist)
 
 
@@ -73,37 +73,24 @@ class Between(DistanceObject):
         self.shape = latlon_conv(self.path, self.coordinates[0].utm["zone_numb"], self.coordinates[0].utm["zone_let"])
 
     def approx_ellipse(self):
-        new_radius = sympy.sqrt((self.coordinates[1].utm["easting"] - self.coordinates[0].utm["easting"]) ** 2 + (
-                    self.coordinates[1].utm["northing"] - self.coordinates[0].utm["northing"]) ** 2)
-        angle = (360 - sympy.asin(
-            (self.coordinates[0].utm["northing"] - self.coordinates[1].utm["northing"]) / new_radius)) * sympy.pi / 180
-        print("neue variablen erechnet")
+        new_radius = sympy.sqrt((self.coordinates[1].utm["easting"] - self.coordinates[0].utm["easting"])**2
+                                + (self.coordinates[1].utm["northing"] - self.coordinates[0].utm["northing"])**2)
+        angle = sympy.acos((self.coordinates[1].utm["easting"] - self.coordinates[0].utm["easting"])
+                           / (sympy.sqrt((self.coordinates[1].utm["northing"] - self.coordinates[0].utm["northing"])**2
+                                         + (self.coordinates[1].utm["easting"]
+                                            - self.coordinates[0].utm["easting"])**2)))
         list_ell = list()
-        list_ell.append((self.coordinates[0].utm["easting"], self.coordinates[0].utm["northing"]))
-        # schleife bearbeiten
         i = 0
-        while i < new_radius:
-            easting = self.coordinates[0].utm["easting"] + i
-            northing = 0.5 * (new_radius - 4 * sympy.sqrt(3 * new_radius ** 2 + 4 * new_radius * i - 4 * i ** 2))
-            list_ell.append((sympy.N(easting), sympy.N(northing)))
-            i += new_radius / 10
-        list_ell.append((self.coordinates[1].utm["easting"], self.coordinates[1].utm["northing"]))
-        print("erster Bogen")
-        while i > 0:
-            easting = self.coordinates[0].utm["easting"] + i
-            northing = 0.5 * (new_radius + 4 * sympy.sqrt(3 * new_radius ** 2 + 4 * new_radius * i - 4 * i ** 2))
-            list_ell.append((sympy.N(easting), sympy.N(northing)))
-            i -= new_radius / 10
-        list_ell = list(dict.fromkeys(list_ell))
-        print("zweiter Bogen")
-        return self.rot_ell(list_ell, angle)
-
-    def rot_ell(self, sh_ell, angle):
+        while i <= 360:
+            x = 0.5 * new_radius * sympy.cos(i * sympy.pi / 180)
+            y = 0.25 * new_radius * sympy.sin(i * sympy.pi / 180)
+            list_ell.append((sympy.N(x), sympy.N(y)))
+            i += 10
         newsh_ell = list()
-        for i in sh_ell:
-            easting = i[0] * sympy.cos(angle) - i[1] * sympy.sin(angle)
-            northing = i[0] * sympy.sin(angle) + i[1] * sympy.cos(angle)
-            newsh_ell.append((sympy.N(easting), sympy.N(northing)))
+        for i in list_ell:
+            easting = i[0] * sympy.cos(angle) - i[1] * sympy.sin(angle) + self.coordinates[0].utm["easting"] + 0.5 * new_radius
+            northing = i[0] * sympy.sin(angle) + i[1] * sympy.cos(angle) + self.coordinates[0].utm["northing"]
+            newsh_ell.append((sympy.N(easting)), sympy.N(northing))
         return tuple(newsh_ell)
 
 
@@ -134,5 +121,3 @@ class Place:
         else:
             conv = utm_lib.to_latlon(coordinate_input[0], coordinate_input[1], coordinate_input[2], coordinate_input[3])
             return {"latitude": conv[0], "longitude": conv[1]}
-
-# TODO: use place instead of tuples

@@ -44,10 +44,10 @@ def get_input():
                 point.append(i)
             shapeList.append(pizzacut.Distance(point[0], float(point[1]), point[2]))
         usercheck = input("Do you want to add another Shape? y/n: ")
-    if len(shapeList) < 2:
-        shapeList.clear()
-        print("Zu wenig Punkte!")
-        get_input()
+    # if len(shapeList) < 2:
+    #     shapeList.clear()
+    #     print("Zu wenig Punkte!")
+    #     get_input()
 
 
 def check_intersection(subj, clip):
