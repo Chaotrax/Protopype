@@ -81,17 +81,20 @@ class Between(DistanceObject):
                                             - self.coordinates[0].utm["easting"])**2)))
         list_ell = list()
         i = 0
+        y_faktor = 0
+        x_faktor = 0
         while i <= 360:
             x = 0.5 * new_radius * sympy.cos(i * sympy.pi / 180)
             y = 0.25 * new_radius * sympy.sin(i * sympy.pi / 180)
-            list_ell.append((sympy.N(x), sympy.N(y)))
+            easting = x * sympy.cos(angle) - y * sympy.sin(angle) + self.coordinates[0].utm["easting"]
+            northing = x * sympy.sin(angle) + y * sympy.cos(angle) + self.coordinates[0].utm["northing"]
+            if i == 0:
+                y_faktor = northing
+                x_faktor = easting
+            list_ell.append((sympy.N(easting + abs(self.coordinates[0].utm["easting"] - x_faktor)),
+                             sympy.N(northing + abs(self.coordinates[0].utm["northing"] - y_faktor))))
             i += 10
-        newsh_ell = list()
-        for i in list_ell:
-            easting = i[0] * sympy.cos(angle) - i[1] * sympy.sin(angle) + self.coordinates[0].utm["easting"] + 0.5 * new_radius
-            northing = i[0] * sympy.sin(angle) + i[1] * sympy.cos(angle) + self.coordinates[0].utm["northing"]
-            newsh_ell.append((sympy.N(easting)), sympy.N(northing))
-        return tuple(newsh_ell)
+        return tuple(list_ell)
 
 
 class Place:
