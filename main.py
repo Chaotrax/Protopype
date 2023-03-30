@@ -6,58 +6,48 @@ from pyclipper import scale_from_clipper
 from pyclipper import scale_to_clipper
 import pizzacut
 
-
 shapeList = list()
 
 
-# def get_input():
-#     usercheck = "y"
-#     print("Please add at least two points for identification")
-#     while usercheck == "y":
-#         decision = input("Please choose between distance and between. d / b: ")
-#         if decision == "b":
-#             point1 = input("Please add Point 1: X Y").split()
-#             point2 = input("Please add Point 2: X Y").split()
-#             punktSammlung.append(pizzacut.Between(point1, point2))
-#         elif decision == "d":
-#             print("Type your Coordinates")
-#             point = input("Format ( X Y direction distance): ").split()
-#             punktSammlung.append(pizzacut.Pizzacut(point[0], point[1], point[3], point[2]))
-#         usercheck = input("Do you want to add another Variable? y/n:").lower()
-#     if len(punktSammlung) < 2:
-#         punktSammlung.clear()
-#         print("Zu wenig Punkte")
-#         get_input()
-#     for j in punktSammlung:
-#         print(j.coordinates, j.shape)
-
-
-def splitnfloat(textin, typ):
-    if typ == "e":
-        return pizzacut.Between(((float(textin[0]), float(textin[1])), (float(textin[2]), float(textin[3]))))
-    else:
-        return pizzacut.Distance((float(textin[0]), float(textin[1])), float(textin[2]), textin[3])
+def floating(textin):
+    point = list(())
+    i = 0
+    while i < len(textin):
+        if i < 2:
+            point.append(float(textin[i]))
+        elif i == 2:
+            point.append(int(textin[i]))
+        else:
+            point.append(textin[i])
+        i += 1
+    return point
 
 
 def get_input():
     usercheck = "y"
     print("Please add at least two Shapes for identification ")
     while usercheck == "y":
-        point = input("Please add your coordinates (X Y): ").split()
+        # generating first Place-Object from input
+        point = list((pizzacut.Place(
+            floating(input("Please add your coordinates in latlng or UTM (X Y ((Number) (Letter))): ").split()),
+            "Startpunkt"),))
         if input("Distance or Between? (d/b): ") == "b":
-            for i in input("Please add the second Point (X Y): ").split():
-                point.append(i)
-            shapeList.append(splitnfloat(tuple(point), "e"))
+            # generating second point as placeobject and append to point which is passed to Between
+            point.append(
+                pizzacut.Place(floating(input("Please add the second Point (X Y ((Number) (Letter))): ").split()),
+                               "Second Point"))
+            shapeList.append(pizzacut.Between(tuple(point)))
             print(shapeList[-1].path)
         else:
-            for i in input("Please specify Distance and Direction from your chosen Point: (Distance Quarter)").split():
+            for i in input("Please specify Distance in Kilometers"
+                           " and Direction from your chosen Point: (Distance Quarter)").split():
                 point.append(i)
-            shapeList.append(splitnfloat(tuple(point), "d"))
+            shapeList.append(pizzacut.Distance(point[0], float(point[1]), point[2]))
         usercheck = input("Do you want to add another Shape? y/n: ")
-    if len(shapeList) < 2:
-        shapeList.clear()
-        print("Zu wenig Punkte!")
-        get_input()
+    # if len(shapeList) < 2:
+    #     shapeList.clear()
+    #     print("Zu wenig Punkte!")
+    #     get_input()
 
 
 def check_intersection(subj, clip):
@@ -67,7 +57,6 @@ def check_intersection(subj, clip):
     pc = pyclipper.Pyclipper()
     pc.AddPath(scale_to_clipper(clip), pyclipper.PT_CLIP, True)
     pc.AddPath(scale_to_clipper(subj), pyclipper.PT_SUBJECT, True)
-    print("test")
     return scale_from_clipper(pc.Execute(pyclipper.CT_INTERSECTION, pyclipper.PFT_POSITIVE, pyclipper.PFT_POSITIVE))
 
 
@@ -76,10 +65,11 @@ schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
 # for i in range(len(shapeList) - 1):
 #     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
 print(schnittflache)
-geolist = list()
-for i in shapeList:
-    geolist.append(i.shape)
-pizzacut.create_gdf(tuple(geolist))
-draw.draw(schnittflache)  # TODO
+draw.draw(shapeList)
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
+
+
+# TODO
+# Datenausgabe in CSV
+# Überarbeitung der Rotation
