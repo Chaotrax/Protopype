@@ -19,6 +19,12 @@ def latlon_conv(shapelist, zone, letter):
 
 
 def switcher_direction(d):
+    """
+    chooses corresponding pair of degrees marking the given direction on windrose
+
+    :param d: direction in Str
+    :return: tuple int
+    """
     switcher = {
         "süd": (225, 315),
         "süden": (225, 315),
@@ -36,6 +42,26 @@ def switcher_direction(d):
 
 
 class DistanceObject:
+    """
+    Informal Interface that defines the place of an object and its shape
+
+    ...
+
+    Attributes
+    ----------
+    coordinates : tuple float
+        a tuple of floats, representing the UTM-coordinates of the object
+
+    coordinates_latlon : dict
+        dictionary containing the coordinates in latitude and longitude of the object
+
+    path : tuple float
+        tuple containing the UTM-coordinates of the approximation of the generated shape
+
+    shape : tuple float
+        tuple containing coordinates of the approximation of the generated shape in Latitude and Longitude
+    """
+
     def __init__(self, points):
         self.coordinates = points
         self.coordinates_latlon = None
@@ -47,6 +73,23 @@ class DistanceObject:
 
 
 class Distance(DistanceObject):
+    """
+    Shapeobject made up of points approximating an arc with a given radius to the startingpoint
+
+    ...
+
+    Attributes
+    __________
+    direction : int
+        Tuple of two ints indicating start and end degree for the geographic direction of the pizzacutshape
+    radius : float
+        radius of the shape in kilometers
+    path : float
+        tuple of utm-coordinates approximating arc
+    shape : dict
+        tuple containing coordinates of the approximation of the generated shape in Latitude and Longitude
+    """
+
     def __init__(self, points, radius: float, direction):
         super().__init__(points)
         self.direction = switcher_direction(direction)
@@ -55,6 +98,13 @@ class Distance(DistanceObject):
         self.shape = latlon_conv(self.path, self.coordinates.utm["zone_numb"], self.coordinates.utm["zone_let"])
 
     def approx_arc(self):
+        """
+        approximates a polyline-arc for a Polygonshape given radius and direction by calculating coordinates of
+        points on the arc
+
+        :return: tuple of points (UTM-Coordinates) forming a Polygon
+        """
+
         newpoints = [(self.coordinates.utm["easting"], self.coordinates.utm["northing"]), ]
         i = self.direction[0]
         while i <= self.direction[1]:
@@ -66,6 +116,22 @@ class Distance(DistanceObject):
 
 
 class Between(DistanceObject):
+    """
+    Shapeobject made up of points approximating an ellipse between two places
+
+    ...
+
+    Attributes
+    ____________
+    formel : Str
+        String representing the equation that was approximated
+
+    path : tuple
+        tuple of coordinates forming the shapeobject with UTM coordinates
+
+    shape : tuple
+        tuple of coordinates forming the shapeobject with latitude and longitude coordinates
+    """
     def __init__(self, points):
         super().__init__(points)
         self.formel = None
@@ -73,31 +139,70 @@ class Between(DistanceObject):
         self.shape = latlon_conv(self.path, self.coordinates[0].utm["zone_numb"], self.coordinates[0].utm["zone_let"])
 
     def approx_ellipse(self):
+        """
+        Builds a polygon approximating an ellipse by using the distance between both given points
+        :return: Tuple of UTM-Coordinates approximating Ellipse
+        """
         new_radius = sympy.sqrt((self.coordinates[1].utm["easting"] - self.coordinates[0].utm["easting"])**2
                                 + (self.coordinates[1].utm["northing"] - self.coordinates[0].utm["northing"])**2)
         angle = sympy.acos((self.coordinates[1].utm["easting"] - self.coordinates[0].utm["easting"])
                            / (sympy.sqrt((self.coordinates[1].utm["northing"] - self.coordinates[0].utm["northing"])**2
                                          + (self.coordinates[1].utm["easting"]
                                             - self.coordinates[0].utm["easting"])**2)))
+        if self.coordinates[0].utm["northing"] > self.coordinates[1].utm["northing"]:
+            angle = -angle
         list_ell = list()
         i = 0
-        y_faktor = 0
-        x_faktor = 0
         while i <= 360:
             x = 0.5 * new_radius * sympy.cos(i * sympy.pi / 180)
             y = 0.25 * new_radius * sympy.sin(i * sympy.pi / 180)
             easting = x * sympy.cos(angle) - y * sympy.sin(angle) + self.coordinates[0].utm["easting"]
             northing = x * sympy.sin(angle) + y * sympy.cos(angle) + self.coordinates[0].utm["northing"]
             if i == 0:
-                y_faktor = northing
-                x_faktor = easting
-            list_ell.append((sympy.N(easting + abs(self.coordinates[0].utm["easting"] - x_faktor)),
-                             sympy.N(northing + abs(self.coordinates[0].utm["northing"] - y_faktor))))
+                x_origin = easting
+                y_origin = northing
+            if angle > 0:
+                if angle < sympy.pi/2:
+                    easting = easting - abs(self.coordinates[0].utm["easting"] - x_origin)
+                    northing = northing + abs(self.coordinates[0].utm["northing"] - y_origin)
+                else:
+                    easting = easting + abs(self.coordinates[0].utm["easting"] - x_origin)
+                    northing = northing + abs(self.coordinates[0].utm["northing"] - y_origin)
+            else:
+                if -angle < sympy.pi/2:
+                    easting = easting + abs(self.coordinates[0].utm["easting"] - x_origin)
+                    northing = northing - abs(self.coordinates[0].utm["northing"] - y_origin)
+                else:
+                    easting = easting - abs(self.coordinates[0].utm["easting"] - x_origin)
+                    northing = northing - abs(self.coordinates[0].utm["northing"] - y_origin)
+            print(abs(easting), abs(northing))
+            list_ell.append((sympy.N(easting),
+                             sympy.N(northing)))
             i += 10
         return tuple(list_ell)
 
 
 class Place:
+    """
+    Object representing a place on a map
+
+    ...
+
+    Attributes
+    __________
+    name : Str
+        name of the place
+
+    input_coordsystem : Str
+        coordinate-system used while initializing the object
+
+    utm : dict
+        dictionary containing utm coordinates, zone number and zone letter
+
+    latlng: dict
+        dictionary containing latitude and longitude
+    """
+
     def __init__(self, coordinate_input, name):
         self.name = name
         self.input_coordsystem = self.check_coordsystem(coordinate_input)
@@ -111,6 +216,13 @@ class Place:
             return "latlng"
 
     def process_utm(self, coordinate_input):
+        """
+        Process input-coordinates into dict
+
+        :param coordinate_input: tuple coordinates as floats used as parameter when initializing object
+        :return: dictionary containing UTM coordinates, zone number and zone letter
+        """
+
         if self.input_coordsystem == "utm":
             return {"easting": coordinate_input[0], "northing": coordinate_input[1], "zone_numb": coordinate_input[2],
                     "zone_let": coordinate_input[3]}
@@ -119,6 +231,12 @@ class Place:
             return {"easting": conv[0], "northing": conv[1], "zone_numb": conv[2], "zone_let": conv[3]}
 
     def process_latlng(self, coordinate_input):
+        """
+        Process input-coordinates into dict
+
+        :param coordinate_input: tuple coordinates as floats used as parameter when initializing object
+        :return: dictionary containing coordinates in latitude and longitude
+        """
         if self.input_coordsystem == "latlng":
             return {"latitude": coordinate_input[0], "longitude": coordinate_input[1]}
         else:

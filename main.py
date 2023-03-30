@@ -27,12 +27,12 @@ def get_input():
     usercheck = "y"
     print("Please add at least two Shapes for identification ")
     while usercheck == "y":
-        # model first point as Place
+        # generating first Place-Object from input
         point = list((pizzacut.Place(
             floating(input("Please add your coordinates in latlng or UTM (X Y ((Number) (Letter))): ").split()),
             "Startpunkt"),))
         if input("Distance or Between? (d/b): ") == "b":
-            # model second point as place and append to point which is passed to Between
+            # generating second point as placeobject and append to point which is passed to Between
             point.append(
                 pizzacut.Place(floating(input("Please add the second Point (X Y ((Number) (Letter))): ").split()),
                                "Second Point"))
@@ -57,7 +57,6 @@ def check_intersection(subj, clip):
     pc = pyclipper.Pyclipper()
     pc.AddPath(scale_to_clipper(clip), pyclipper.PT_CLIP, True)
     pc.AddPath(scale_to_clipper(subj), pyclipper.PT_SUBJECT, True)
-    print("test")
     return scale_from_clipper(pc.Execute(pyclipper.CT_INTERSECTION, pyclipper.PFT_POSITIVE, pyclipper.PFT_POSITIVE))
 
 
@@ -67,10 +66,10 @@ schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
 #     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
 print(schnittflache)
 draw.draw(shapeList)
-# geolist = list()
-# for i in shapeList:
-#     geolist.append(i.shape)
-# pizzacut.create_gdf(tuple(geolist))
-# draw.draw(schnittflache)  # TODO
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
+
+
+# TODO
+# Datenausgabe in CSV
+# Überarbeitung der Rotation
