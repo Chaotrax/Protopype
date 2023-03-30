@@ -4,12 +4,6 @@ import utm as utm_lib
 from shapely import Polygon
 
 
-# def create_gdf(geolist: tuple):
-#     gs = geolist[0]
-#     for i in range(len(geolist)):
-#         gs.append(geolist[i + 1])
-#     geopandas.GeoDataFrame(geometry=gs).plot()
-
 def latlon_conv(shapelist, zone, letter):
     newlist = []
     print(shapelist)
