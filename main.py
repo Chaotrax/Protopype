@@ -6,10 +6,10 @@ import pyclipper
 from pyclipper import scale_from_clipper
 from pyclipper import scale_to_clipper
 import pizzacut
+import csv
 
 shapeList = list()
-d = {'Name': "", 'CS': "", 'Coordinates': [], 'geometry': []}
-gdf = geopandas.GeoDataFrame(d)
+input_dict = {}
 user_abort = False
 
 
@@ -24,7 +24,7 @@ def floating(textin):
         else:
             point.append(textin[i])
         i += 1
-    return point
+    return tuple(point)
 
 
 def get_input():
@@ -33,46 +33,59 @@ def get_input():
     # when manually : latlng, utm or geocoding
     dec0 = input("(M)anually / (F)ile / File-(I)nstructions: ").lower()
     if dec0 == "f":
-        global gdf
-        gdf = geopandas.read_file(input("Please enter filepath (../file.csv): "))
-        print(gdf)
+        csv_reader(input("Please input filepath (../file.csv): "))
     elif dec0 == "i":
-        print("The CSV-file should contain the following columns: \n Name (optional), CS (coordinate system),"
+        print("The CSV-file should contain the following columns: \n cs (coordinate system),"
               " coordinates, type, direction, distance in km, IoB (Index of second point for Between)")
         get_input()
     else:
-        get_input()
-
-
+        get_input_manually()
+    compute_dict = input_dict
+    for z in compute_dict:
+        if z.typ == "between":
+            shapeList.append(pizzacut.Between((z, input_dict[z.verweis])))
+            compute_dict.pop(z.verweis)
+        else:
+            shapeList.append(pizzacut.Distance(z))
 
 
 def get_input_manually():
-    usercheck = "y"
-    print("Please add at least two shapes for calculation ")
-    while usercheck == "y":
-        # generating first Place-Object from input
-        point = list((pizzacut.Place(
-            floating(input("Please add your coordinates in latlng or UTM (X Y ((Number) (Letter))): ").split()),
-            "Startpunkt"),))
-        if input("Distance or Between? (d/b): ") == "b":
-            # generating second point as placeobject and append to point which is passed to Between
-            point.append(
-                pizzacut.Place(floating(input("Please add the second Point (X Y ((Number) (Letter))): ").split()),
-                               "Second Point"))
-            shapeList.append(pizzacut.Between(tuple(point)))
-            print(shapeList[-1].path)
+    k_start = len(input_dict)
+    usercheck = False
+    while not usercheck:
+        zone = ""
+        cs = input("Please choose your input coordinate system (u)tm/(l)atlng: ")
+        coords = input("Please input your coordinates: ")
+        if cs.lower() == "u":
+            zone = input("please specify zone number and letter: ")
+        point = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=None, typ=None)
+        input_dict[len(input_dict)] = point
+        if input("Do you want to add another Place? ").lower() == "n":
+            usercheck = True
+    # print all points after input
+    print("please add the intended computing")
+    k = 0
+    # TODO test ob Fehler mit Zählung
+    while k < (len(input_dict)-k_start):
+        typ = input("please add type of input: between / direction: ").lower()
+        if typ == "between":
+            input_dict[k].typ = typ
+            input_dict[k].verweis = input("Please input index of second point")
         else:
-            for i in input("Please specify Distance in Kilometers"
-                           " and Direction from your chosen Point: (Distance Quarter)").split():
-                point.append(i)
-            shapeList.append(pizzacut.Distance(point[0], float(point[1]), point[2]))
-        usercheck = input("Do you want to add another Shape? y/n: ")
-    if len(shapeList) < 2:
-        shapeList.clear()
-        print("Zu wenig Punkte!")
-        get_input()
+            input_dict[k].typ = typ
+            input_dict[k].verweis = input("Please specify Distance in Kilometers"
+                                          " and Direction from your chosen Point: (Distance Quarter)")
+        k += 1
 
-def gdf_to_places():
+
+def csv_reader(filepath: str):
+    with open(filepath) as file:
+        csvreader = csv.DictReader(file)
+        j = len(input_dict)
+        for row in csvreader:
+            input_dict[j] = pizzacut.Place(cs=row["cs"], coordinate_input=floating(row["coordinates"].split()),
+                                           typ=row["type"], verweis=row["verweis"])
+            j += 1
 
 
 def check_intersection(subj, clip):
@@ -89,8 +102,8 @@ print("Start by adding your places manually or via CSV-file:")
 get_input()
 while not user_abort:
     schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
-    # for i in range(len(shapeList) - 1):
-    #     schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
+    for i in range(len(shapeList) - 1):
+        schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
     print(schnittflache)
     draw.draw(shapeList)
 

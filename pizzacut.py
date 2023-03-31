@@ -84,10 +84,10 @@ class Distance(DistanceObject):
         tuple containing coordinates of the approximation of the generated shape in Latitude and Longitude
     """
 
-    def __init__(self, points, radius: float, direction):
+    def __init__(self, points):
         super().__init__(points)
-        self.direction = switcher_direction(direction)
-        self.radius = radius * 1000
+        self.direction = switcher_direction(self.coordinates.verweis[1])
+        self.radius = float(self.coordinates.verweis[0]) * 1000
         self.path = self.approx_arc()
         self.shape = latlon_conv(self.path, self.coordinates.utm["zone_numb"], self.coordinates.utm["zone_let"])
 
@@ -197,17 +197,24 @@ class Place:
         dictionary containing latitude and longitude
     """
 
-    def __init__(self, coordinate_input, name):
-        self.name = name
-        self.input_coordsystem = self.check_coordsystem(coordinate_input)
+    def __init__(self, coordinate_input: tuple, cs: str, typ, verweis):
+        self.typ = typ
+        self.verweis = self.set_verweis(verweis)
+        self.input_coordsystem = self.check_coordsystem(cs.lower())
         self.utm = self.process_utm(coordinate_input)
         self.latlng = self.process_latlng(coordinate_input)
 
-    def check_coordsystem(self, coordinate_input):
-        if len(coordinate_input) > 2:
+    def check_coordsystem(self, cs):
+        if (cs == "u") or (cs == "utm"):
             return "utm"
         else:
             return "latlng"
+
+    def set_verweis(self, verweis_check):
+        if self.typ == "between":
+            return int(verweis_check)
+        else:
+            return verweis_check.split()
 
     def process_utm(self, coordinate_input):
         """
