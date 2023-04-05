@@ -1,3 +1,3 @@
 # Protopype
-Prototype for my Bachelors Thesis in Pyhton
+Prototype for my Bachelors Thesis in Python
 
