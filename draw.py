@@ -7,7 +7,6 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-# Draw my sh&t
 def draw(shapelist):
     longs = []
     lats = []

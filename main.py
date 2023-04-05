@@ -36,7 +36,7 @@ def get_input():
         csv_reader(input("Please input filepath (../file.csv): "))
     elif dec0 == "i":
         print("The CSV-file should contain the following columns: \n cs (coordinate system),"
-              " coordinates, type, direction, distance in km, IoB (Index of second point for Between)")
+              " coordinates, type, Index or Direction/Distance")
         get_input()
     else:
         get_input_manually()
@@ -65,17 +65,17 @@ def get_input_manually():
             zone = input("please specify zone number and letter: ")
         point = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=None, typ=None)
         input_dict[len(input_dict)] = point
-        if input("Do you want to add another Place? ").lower() == "n":
+        if input("Do you want to add another Place? (y/n) ").lower() == "n":
             usercheck = True
     # print all points after input
-    print("please add the intended computing")
+    print("please add the intended method of computing: ")
     k = 0
     # TODO test ob Fehler mit Zählung
     while k < (len(input_dict)-k_start):
         typ = input("please add type of input: between / direction: ").lower()
         if typ == "between":
             input_dict[k].typ = typ
-            input_dict[k].verweis = input("Please input index of second point")
+            input_dict[k].verweis = input("Please name index of second point: ")
         else:
             input_dict[k].typ = typ
             input_dict[k].verweis = input("Please specify Distance in Kilometers"
@@ -93,6 +93,17 @@ def csv_reader(filepath: str):
             j += 1
 
 
+def csv_writer(filepath: str):
+    with open(filepath, 'w', newline=';') as file:
+        writer = csv.writer(file)
+        for i in input_dict:
+            coordinates = input_dict[i].utm["northing"] + " " + input_dict[i].utm["easting"] \
+                          + " " + input_dict[i].utm["zone_numb"] + " " + input_dict[i].utm["zone_let"]
+            row = ["utm", coordinates, input_dict[i].typ, str(input_dict[i].verweis)]
+        writer.writerow(row)
+
+
+
 def check_intersection(subj, clip):
     # POLYGONE aufstellen -> näherungsweise bestimmen über Segmente. (wieviele Segmente ist sinnvol? teil von
     # pizzacut.py als funktion.
@@ -104,16 +115,18 @@ def check_intersection(subj, clip):
 
 
 print("Start by adding your places manually or via CSV-file:")
-get_input()
-# while not user_abort:
-schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
-for i in range(len(shapeList) - 1):
-    schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
-print(schnittflache)
-draw.draw(shapeList)
-
-# Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
-
+while not user_abort:
+    get_input()
+    schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
+    for i in range(len(shapeList) - 1):
+        schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
+    print(schnittflache)
+    draw.draw(shapeList)
+    restart = input("Add (n)ew Points, (p)rint or (a)bort?")
+    if restart == "a":
+        user_abort = True
+    elif restart == "p":
+        csv_writer(input("please input filepath: "))
 
 # TODO
 # Datenausgabe in CSV
