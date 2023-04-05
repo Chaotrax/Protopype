@@ -40,13 +40,18 @@ def get_input():
         get_input()
     else:
         get_input_manually()
-    compute_dict = input_dict
-    for z in compute_dict:
+    marked_indices = []
+    lindex = 0
+    for z in input_dict:
         if z.typ == "between":
-            shapeList.append(pizzacut.Between((z, input_dict[z.verweis])))
-            compute_dict.pop(z.verweis)
+            if lindex not in marked_indices:
+                shapeList.append(pizzacut.Between((z, input_dict[str(z.verweis)])))
+                marked_indices.append(int(z.verweis))
+            else:
+                print("second point")
         else:
             shapeList.append(pizzacut.Distance(z))
+        lindex += 1
 
 
 def get_input_manually():
@@ -100,12 +105,12 @@ def check_intersection(subj, clip):
 
 print("Start by adding your places manually or via CSV-file:")
 get_input()
-while not user_abort:
-    schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
-    for i in range(len(shapeList) - 1):
-        schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
-    print(schnittflache)
-    draw.draw(shapeList)
+# while not user_abort:
+schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
+for i in range(len(shapeList) - 1):
+    schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
+print(schnittflache)
+draw.draw(shapeList)
 
 # Was passiert wenn zwei angaben übereinstimmen aber die dritte nicht?
 

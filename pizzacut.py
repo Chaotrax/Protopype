@@ -213,7 +213,10 @@ class Place:
     def set_verweis(self, verweis_check):
         if self.typ == "between":
             return int(verweis_check)
+        elif self.typ is None:
+            return verweis_check
         else:
+            print(verweis_check)
             return verweis_check.split()
 
     def process_utm(self, coordinate_input):
