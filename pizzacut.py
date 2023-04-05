@@ -156,7 +156,7 @@ class Between(DistanceObject):
                 x_origin = easting
                 y_origin = northing
             if angle > 0:
-                if angle < sympy.pi/2:
+                if angle > sympy.pi/2:
                     easting = easting - abs(self.coordinates[0].utm["easting"] - x_origin)
                     northing = northing + abs(self.coordinates[0].utm["northing"] - y_origin)
                 else:
