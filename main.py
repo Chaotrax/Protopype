@@ -41,17 +41,17 @@ def get_input():
     else:
         get_input_manually()
     marked_indices = []
-    lindex = 0
+    for x, y in input_dict.items():
+        print(x, y)
     for z in input_dict:
-        if z.typ == "between":
-            if lindex not in marked_indices:
-                shapeList.append(pizzacut.Between((z, input_dict[str(z.verweis)])))
-                marked_indices.append(int(z.verweis))
+        if input_dict[z].typ == "between":
+            if z not in marked_indices:
+                shapeList.append(pizzacut.Between((input_dict[z], input_dict[int(input_dict[z].verweis)])))
+                marked_indices.append(int(input_dict[z].verweis))
             else:
                 print("second point")
         else:
-            shapeList.append(pizzacut.Distance(z))
-        lindex += 1
+            shapeList.append(pizzacut.Distance(input_dict[z]))
 
 
 def get_input_manually():
