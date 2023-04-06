@@ -23,7 +23,7 @@ def draw(shapelist):
         lat=lats))
 
     fig.update_layout(
-        mapbox={'style': "stamen-terrain", 'center': {'lon': longs[0], 'lat': lats[0]}, 'zoom': 2},
+        mapbox={'style': "stamen-terrain", 'center': {'lon': longs[0], 'lat': lats[0]}, 'zoom': 8},
         showlegend=False,
         margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
 

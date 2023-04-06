@@ -6,7 +6,6 @@ from shapely import Polygon
 
 def latlon_conv(shapelist, zone, letter):
     newlist = []
-    print(shapelist)
     for i in shapelist:
         newlist.append(utm_lib.to_latlon(int(i[0]), int(i[1]), zone, letter))
     return tuple(newlist)
@@ -169,7 +168,6 @@ class Between(DistanceObject):
                 else:
                     easting = easting - abs(self.coordinates[0].utm["easting"] - x_origin)
                     northing = northing - abs(self.coordinates[0].utm["northing"] - y_origin)
-            print(abs(easting), abs(northing))
             list_ell.append((sympy.N(easting),
                              sympy.N(northing)))
             i += 10
@@ -216,7 +214,6 @@ class Place:
         elif self.typ is None:
             return verweis_check
         else:
-            print(verweis_check)
             return verweis_check.split()
 
     def process_utm(self, coordinate_input):

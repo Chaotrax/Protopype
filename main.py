@@ -1,5 +1,5 @@
 # Press Umschalt+F10 to execute it or replace it with your code.
-import geopandas
+# import geopandas
 
 import draw
 import pyclipper
@@ -24,7 +24,6 @@ def floating(textin):
         else:
             point.append(textin[i])
         i += 1
-    print(point)
     return tuple(point)
 
 
@@ -47,8 +46,6 @@ def get_input():
             if z not in marked_indices:
                 shapeList.append(pizzacut.Between((input_dict[z], input_dict[int(input_dict[z].verweis)])))
                 marked_indices.append(int(input_dict[z].verweis))
-            else:
-                print("second point")
         else:
             shapeList.append(pizzacut.Distance(input_dict[z]))
 
@@ -101,8 +98,18 @@ def csv_writer(filepath: str):
         for i in input_dict:
             coordinates = str(input_dict[i].utm["easting"]) + " " + str(input_dict[i].utm["northing"]) \
                           + " " + str(input_dict[i].utm["zone_numb"]) + " " + str(input_dict[i].utm["zone_let"])
-            row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[i].typ), 'verweis': str(input_dict[i].verweis)}
+            if input_dict[i].typ == "between":
+                verweis = input_dict[i].verweis
+            else:
+                verweis = ' '.join(str(e) for e in input_dict[i].verweis)
+            row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[i].typ), 'verweis': verweis}
             writer.writerow(row)
+
+
+def save_polygon(filepath: str, schnittflache):
+    f = open(filepath, "w")
+    f.write(str(schnittflache))
+    f.close()
 
 
 def check_intersection(subj, clip):
@@ -118,17 +125,23 @@ def check_intersection(subj, clip):
 print("Start by adding your places manually or via CSV-file:")
 while not user_abort:
     get_input()
-    print(shapeList)
     schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
     for i in range(len(shapeList) - 1):
         schnittflache = check_intersection(shapeList[i-1].path, shapeList[i].path)
-    print(schnittflache)
+    print("The clipped Polygon is modelled by: \n", schnittflache)
     draw.draw(shapeList)
-    restart = input("Add (n)ew Points, (s)ave or (a)bort?")
-    if restart == "a":
-        user_abort = True
-    elif restart == "s":
-        csv_writer(input("please input filepath: "))
+    choice = False
+    while not choice:
+        restart = input("Add (n)ew Points, (s)ave input to CSV, (p)rint Clipped polygon to file or (a)bort?")
+        if restart == "a":
+            choice = True
+            user_abort = True
+        elif restart == "s":
+            csv_writer(input("please input desired filename and path: "))
+        elif restart == "p":
+            save_polygon(input("please input desired filename and path: "), schnittflache)
+        else:
+            choice = True
 
 # TODO
 # https://geopandas.org/en/stable/docs/user_guide/geocoding.html#geocoding
