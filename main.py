@@ -24,6 +24,7 @@ def floating(textin):
         else:
             point.append(textin[i])
         i += 1
+    print(point)
     return tuple(point)
 
 
@@ -41,8 +42,6 @@ def get_input():
     else:
         get_input_manually()
     marked_indices = []
-    for x, y in input_dict.items():
-        print(x, y)
     for z in input_dict:
         if input_dict[z].typ == "between":
             if z not in marked_indices:
@@ -90,17 +89,20 @@ def csv_reader(filepath: str):
         for row in csvreader:
             input_dict[j] = pizzacut.Place(cs=row["cs"], coordinate_input=floating(row["coordinates"].split()),
                                            typ=row["type"], verweis=row["verweis"])
+            print(dict(row))
             j += 1
 
 
 def csv_writer(filepath: str):
-    with open(filepath, 'w', newline=';') as file:
-        writer = csv.writer(file)
+    header = ['cs', 'coordinates', 'type', 'verweis']
+    with open(filepath, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=header)
+        writer.writeheader()
         for i in input_dict:
-            coordinates = input_dict[i].utm["northing"] + " " + input_dict[i].utm["easting"] \
-                          + " " + input_dict[i].utm["zone_numb"] + " " + input_dict[i].utm["zone_let"]
-            row = ["utm", coordinates, input_dict[i].typ, str(input_dict[i].verweis)]
-        writer.writerow(row)
+            coordinates = str(input_dict[i].utm["easting"]) + " " + str(input_dict[i].utm["northing"]) \
+                          + " " + str(input_dict[i].utm["zone_numb"]) + " " + str(input_dict[i].utm["zone_let"])
+            row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[i].typ), 'verweis': str(input_dict[i].verweis)}
+            writer.writerow(row)
 
 
 def check_intersection(subj, clip):
@@ -116,19 +118,17 @@ def check_intersection(subj, clip):
 print("Start by adding your places manually or via CSV-file:")
 while not user_abort:
     get_input()
-    schnittflache = check_intersection(shapeList[-1].shape, shapeList[0].shape)
+    print(shapeList)
+    schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
     for i in range(len(shapeList) - 1):
-        schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
+        schnittflache = check_intersection(shapeList[i-1].path, shapeList[i].path)
     print(schnittflache)
     draw.draw(shapeList)
-    restart = input("Add (n)ew Points, (p)rint or (a)bort?")
+    restart = input("Add (n)ew Points, (s)ave or (a)bort?")
     if restart == "a":
         user_abort = True
-    elif restart == "p":
+    elif restart == "s":
         csv_writer(input("please input filepath: "))
 
 # TODO
-# Datenausgabe in CSV
-# Strukturierung in Geopandas
-# inputoptionen für hand und files
 # https://geopandas.org/en/stable/docs/user_guide/geocoding.html#geocoding

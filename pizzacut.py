@@ -144,7 +144,7 @@ class Between(DistanceObject):
                                          + (self.coordinates[1].utm["easting"]
                                             - self.coordinates[0].utm["easting"])**2)))
         if self.coordinates[0].utm["northing"] > self.coordinates[1].utm["northing"]:
-            angle = -angle
+            angle = angle * -1
         list_ell = list()
         i = 0
         while i <= 360:
