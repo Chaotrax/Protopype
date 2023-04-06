@@ -103,7 +103,6 @@ def csv_writer(filepath: str):
         writer.writerow(row)
 
 
-
 def check_intersection(subj, clip):
     # POLYGONE aufstellen -> näherungsweise bestimmen über Segmente. (wieviele Segmente ist sinnvol? teil von
     # pizzacut.py als funktion.
@@ -117,7 +116,7 @@ def check_intersection(subj, clip):
 print("Start by adding your places manually or via CSV-file:")
 while not user_abort:
     get_input()
-    schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
+    schnittflache = check_intersection(shapeList[-1].shape, shapeList[0].shape)
     for i in range(len(shapeList) - 1):
         schnittflache = check_intersection(shapeList[i-1].shape, shapeList[i].shape)
     print(schnittflache)
