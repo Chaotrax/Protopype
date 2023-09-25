@@ -29,19 +29,19 @@ def switcher_direction(d):
         "north": (45, 135),
         "norden": (45, 135),
         "nord": (45, 135),
-        "Nordost": (0, 90),
-        "Nordwest": (90, 180),
-        "Northwest": (90, 180),
-        "Northeast": (0, 90),
+        "nordost": (0, 90),
+        "nordwest": (90, 180),
+        "northwest": (90, 180),
+        "northeast": (0, 90),
         "ost": (315, 405),
         "osten": (315, 405),
         "east": (315, 405),
         "westen": (135, 225),
         "west": (135, 225)
     }
-    if isinstance(d, str):
-        return switcher.get(d.lower(), "keine Himmelsrichtung")
-    return d
+    if isinstance(d, tuple):
+        return d
+    return switcher.get(d.lower(), "keine Himmelsrichtung")
 
 
 class DistanceObject:
@@ -109,6 +109,7 @@ class Distance(DistanceObject):
         """
 
         newpoints = [(self.coordinates.utm["easting"], self.coordinates.utm["northing"]), ]
+        print(self.direction)
         i = self.direction[0]
         while i <= self.direction[1]:
             easting = self.coordinates.utm["easting"] + self.radius * sympy.cos(i * sympy.pi / 180)
@@ -225,7 +226,12 @@ class Place:
         elif self.typ is None:
             return verweis_check
         else:
-            return verweis_check.split()
+            direct = tuple(verweis_check.split())
+            print(direct)
+            if len(direct) == 3:
+                return tuple((direct[0], (int(direct[1]), int(direct[2]))))
+            else:
+                return direct
 
     def process_utm(self, coordinate_input):
         """

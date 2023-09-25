@@ -36,22 +36,22 @@ def get_input():
         csv_reader(input("Please input filepath (../file.csv): "))
     elif dec0 == "i":
         print("The CSV-file should contain the following columns: \n cs (coordinate system),"
-              " coordinates, type, Index or Direction/Distance")
+              "coordinates, type, Index or Direction/Distance. \n The line following an object of type Between is "
+              "processed as the reference object")
         get_input()
     else:
         get_input_manually()
-    marked_indices = []
     for z in input_dict:
-        if input_dict[z].typ == "between":
-            if z not in marked_indices:
-                shapeList.append(pizzacut.Between((input_dict[z], input_dict[int(input_dict[z].verweis)])))
-                marked_indices.append(int(input_dict[z].verweis))
+        if isinstance(input_dict[z], tuple):
+            if len(input_dict[z]) == 3:
+                shapeList.append(pizzacut.Between((input_dict[z][0], input_dict[z][1]), width=input_dict[z][2]))
+            else:
+                shapeList.append(pizzacut.Between((input_dict[z][0], input_dict[z][1])))
         else:
             shapeList.append(pizzacut.Distance(input_dict[z]))
 
 
 def get_input_manually():
-    k_start = len(input_dict)
     usercheck = False
     while not usercheck:
         zone = ""
@@ -60,35 +60,53 @@ def get_input_manually():
         if cs.lower() == "u":
             zone = input("please specify zone number and letter: ")
         point = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=None, typ=None)
-        input_dict[len(input_dict)] = point
-        if input("Do you want to add another Place? (y/n) ").lower() == "n":
-            usercheck = True
-    # print all points after input
-    print("please add the intended method of computing: ")
-    k = 0
-    # TODO test ob Fehler mit Zählung
-    while k < (len(input_dict)-k_start):
-        typ = input("please add type of input: between / direction: ").lower()
-        if typ == "between":
-            input_dict[k].typ = typ
-            input_dict[k].verweis = input("Please name index of second point: ")
+        typ = input("please name type of input: (b)etween / (d)irection: ").lower()
+        if typ == "between" or typ == "b":
+            point.typ = "between"
+            point.verweis = 0
+            zone = ""
+            cs = input("Please choose your input coordinate system for second Point of Reference (u)tm/(l)atlng: ")
+            coords = input("Please input your coordinates: ")
+            if cs.lower() == "u":
+                zone = input("please specify zone number and letter: ")
+            second = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=1,
+                                    typ=None)
+            second.typ = typ
+            opt_mod = input("Relation of the two main axes (default= 0.25)")
+            if len(opt_mod) == 0:
+                point = (point, second)
+            else:
+                point = (point, second, float(opt_mod))
         else:
-            input_dict[k].typ = typ
-            input_dict[k].verweis = input("Please specify Distance in Kilometers"
-                                          "and Direction from your chosen Point in Quarter or Tuple of degrees: ("
-                                          "Distance Quarter/)")
-        k += 1
+            point.typ = "direction"
+            point.verweis = point.set_verweis(input("Please specify Distance in Kilometers and Direction from your "
+                                                    "chosen Point in Quarter or Tuple of degrees: (Distance Quarter "
+                                                    "or Distance Start End)"))
+        input_dict[len(input_dict)] = point
+        if input("Do you want to add another Reference? (y/n) ").lower() == "n":
+            usercheck = True
 
 
 def csv_reader(filepath: str):
     with open(filepath) as file:
         csvreader = csv.DictReader(file)
-        j = len(input_dict)
+        read_list = list()
+        j = 0
         for row in csvreader:
-            input_dict[j] = pizzacut.Place(cs=row["cs"], coordinate_input=floating(row["coordinates"].split()),
-                                           typ=row["type"], verweis=row["verweis"])
+            read_list[j] = pizzacut.Place(cs=row["cs"], coordinate_input=floating(row["coordinates"].split()),
+                                          typ=row["type"], verweis=row["verweis"])
             print(dict(row))
             j += 1
+        j = 0
+        k = len(input_dict)
+        while j < len(read_list):
+            if read_list[j].typ == "between":
+                input_dict[k] = (read_list[j], read_list[j + 1])
+                j += 1
+            else:
+                input_dict[k] = read_list[j]
+            j += 1
+            k += 1
 
 
 def csv_writer(filepath: str):
@@ -97,14 +115,19 @@ def csv_writer(filepath: str):
         writer = csv.DictWriter(file, fieldnames=header)
         writer.writeheader()
         for i in input_dict:
-            coordinates = str(input_dict[i].utm["easting"]) + " " + str(input_dict[i].utm["northing"]) \
-                          + " " + str(input_dict[i].utm["zone_numb"]) + " " + str(input_dict[i].utm["zone_let"])
-            if input_dict[i].typ == "between":
-                verweis = input_dict[i].verweis
+            if isinstance(i, tuple):
+                for j in i:
+                    coordinates = str(j.utm["easting"]) + " " + str(j.utm["northing"]) \
+                                  + " " + str(j.utm["zone_numb"]) + " " + str(j.utm["zone_let"])
+                    verweis = j.verweis
+                    row = {'cs': "utm", 'coordinates': coordinates, 'type': str(j.typ), 'verweis': verweis}
+                    writer.writerow(row)
             else:
-                verweis = ' '.join(str(e) for e in input_dict[i].verweis)
-            row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[i].typ), 'verweis': verweis}
-            writer.writerow(row)
+                coordinates = str(i.utm["easting"]) + " " + str(i.utm["northing"]) \
+                              + " " + str(i.utm["zone_numb"]) + " " + str(i.utm["zone_let"])
+                verweis = ' '.join(str(e) for e in i.verweis)
+                row = {'cs': "utm", 'coordinates': coordinates, 'type': str(i.typ), 'verweis': verweis}
+                writer.writerow(row)
 
 
 def save_polygon(filepath: str, schnittflache):
@@ -128,7 +151,7 @@ while not user_abort:
     get_input()
     schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
     for i in range(len(shapeList) - 1):
-        schnittflache = check_intersection(shapeList[i-1].path, shapeList[i].path)
+        schnittflache = check_intersection(shapeList[i - 1].path, shapeList[i].path)
     print("The clipped Polygon is modelled by: \n", schnittflache)
     draw.draw(shapeList)
     choice = False
