@@ -75,7 +75,8 @@ def get_input_manually():
         else:
             input_dict[k].typ = typ
             input_dict[k].verweis = input("Please specify Distance in Kilometers"
-                                          " and Direction from your chosen Point: (Distance Quarter)")
+                                          "and Direction from your chosen Point in Quarter or Tuple of degrees: ("
+                                          "Distance Quarter/)")
         k += 1
 
 

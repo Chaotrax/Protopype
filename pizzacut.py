@@ -13,25 +13,35 @@ def latlon_conv(shapelist, zone, letter):
 
 def switcher_direction(d):
     """
-    chooses corresponding pair of degrees marking the given direction on windrose
+    chooses corresponding pair of degrees marking the given direction on windrose or takes a pair of degrees (tuple)
 
-    :param d: direction in Str
+    :param d: direction in Str or tuple int
     :return: tuple int
     """
     switcher = {
         "süd": (225, 315),
         "süden": (225, 315),
         "south": (225, 315),
+        "südwest": (180, 270),
+        "südost": (270, 360),
+        "southeast": (270, 360),
+        "southwest": (180, 270),
         "north": (45, 135),
         "norden": (45, 135),
         "nord": (45, 135),
+        "Nordost": (0, 90),
+        "Nordwest": (90, 180),
+        "Northwest": (90, 180),
+        "Northeast": (0, 90),
         "ost": (315, 405),
         "osten": (315, 405),
         "east": (315, 405),
         "westen": (135, 225),
         "west": (135, 225)
     }
-    return switcher.get(d.lower(), "keine Himmelsrichtung")
+    if isinstance(d, str):
+        return switcher.get(d.lower(), "keine Himmelsrichtung")
+    return d
 
 
 class DistanceObject:
@@ -125,13 +135,14 @@ class Between(DistanceObject):
     shape : tuple
         tuple of coordinates forming the shapeobject with latitude and longitude coordinates
     """
-    def __init__(self, points):
+    def __init__(self, points, width=0.25):
         super().__init__(points)
+        self.width = width
         self.formel = None
-        self.path = self.approx_ellipse()
+        self.path = self.approx_ellipse(self.width)
         self.shape = latlon_conv(self.path, self.coordinates[0].utm["zone_numb"], self.coordinates[0].utm["zone_let"])
 
-    def approx_ellipse(self):
+    def approx_ellipse(self, width):
         """
         Builds a polygon approximating an ellipse by using the distance between both given points
         :return: Tuple of UTM-Coordinates approximating Ellipse
@@ -148,7 +159,7 @@ class Between(DistanceObject):
         i = 0
         while i <= 360:
             x = 0.5 * new_radius * sympy.cos(i * sympy.pi / 180)
-            y = 0.25 * new_radius * sympy.sin(i * sympy.pi / 180)
+            y = width * new_radius * sympy.sin(i * sympy.pi / 180)
             easting = x * sympy.cos(angle) - y * sympy.sin(angle) + self.coordinates[0].utm["easting"]
             northing = x * sympy.sin(angle) + y * sympy.cos(angle) + self.coordinates[0].utm["northing"]
             if i == 0:
