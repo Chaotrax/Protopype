@@ -5,12 +5,19 @@ import draw
 import pyclipper
 from pyclipper import scale_from_clipper
 from pyclipper import scale_to_clipper
+from geopy.geocoders import Nominatim
 import pizzacut
 import csv
 
 shapeList = list()
 input_dict = {}
 user_abort = False
+geolocator = Nominatim(timeout=2, user_agent="Protopype")
+
+
+def geocode(cityname):
+    location = geolocator.geocode(cityname)
+    return tuple((location.latitude, location.longitude))
 
 
 def floating(textin):
@@ -28,9 +35,6 @@ def floating(textin):
 
 
 def get_input():
-    # check if user wants to input file or manually
-    # when using file : csv or geojson?
-    # when manually : latlng, utm or geocoding
     dec0 = input("(M)anually / (F)ile / File-(I)nstructions: ").lower()
     if dec0 == "f":
         csv_reader(input("Please input filepath (../file.csv): "))
@@ -55,24 +59,32 @@ def get_input_manually():
     usercheck = False
     while not usercheck:
         zone = ""
-        cs = input("Please choose your input coordinate system (u)tm/(l)atlng: ")
-        coords = input("Please input your coordinates: ")
-        if cs.lower() == "u":
-            zone = input("please specify zone number and letter: ")
-        point = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=None, typ=None)
+        cs = input("Please choose your input coordinate system (u)tm/(l)atlng or type in a placename: ")
+        if cs.lower() != "u" or cs.lower() != "l":
+            point = pizzacut.Place(coordinate_input=geocode(cs), cs="latlng", verweis=None, typ=None)
+        else:
+            coords = input("Please input your coordinates: ")
+            if cs.lower() == "u":
+                zone = input("please specify zone number and letter: ")
+            point = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs,
+                                   verweis=None, typ=None)
         typ = input("please name type of input: (b)etween / (d)irection: ").lower()
         if typ == "between" or typ == "b":
             point.typ = "between"
             point.verweis = 0
             zone = ""
-            cs = input("Please choose your input coordinate system for second Point of Reference (u)tm/(l)atlng: ")
-            coords = input("Please input your coordinates: ")
-            if cs.lower() == "u":
-                zone = input("please specify zone number and letter: ")
-            second = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=1,
-                                    typ=None)
+            cs = input("Please choose your input coordinate system for second point of reference (u)tm/(l)atlng or "
+                       "type in a placename: ")
+            if cs.lower() != "u" or cs.lower() != "l":
+                second = pizzacut.Place(coordinate_input=geocode(cs), cs="latlng", verweis=None, typ=None)
+            else:
+                coords = input("Please input your coordinates: ")
+                if cs.lower() == "u":
+                    zone = input("please specify zone number and letter: ")
+                second = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=1,
+                                        typ=None)
             second.typ = typ
-            opt_mod = input("Relation of the two main axes (default= 0.25)")
+            opt_mod = input("Relation of the two main axes (default= 0.25) ")
             if len(opt_mod) == 0:
                 point = (point, second)
             else:
@@ -81,7 +93,7 @@ def get_input_manually():
             point.typ = "direction"
             point.verweis = point.set_verweis(input("Please specify Distance in Kilometers and Direction from your "
                                                     "chosen Point in Quarter or Tuple of degrees: (Distance Quarter "
-                                                    "or Distance Start End)"))
+                                                    "or Distance Start End): "))
         input_dict[len(input_dict)] = point
         if input("Do you want to add another Reference? (y/n) ").lower() == "n":
             usercheck = True
@@ -166,6 +178,3 @@ while not user_abort:
             save_polygon(input("please input desired filename and path: "), schnittflache)
         else:
             choice = True
-
-# TODO
-# https://geopandas.org/en/stable/docs/user_guide/geocoding.html#geocoding
