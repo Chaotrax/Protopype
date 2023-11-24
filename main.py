@@ -60,11 +60,11 @@ def get_input_manually():
     while not usercheck:
         zone = ""
         cs = input("Please choose your input coordinate system (u)tm/(l)atlng or type in a placename: ")
-        if cs.lower() != "u" or cs.lower() != "l":
+        if cs.lower() != "u" and cs.lower() != "l" and cs.lower() != "utm" and cs.lower() != "latlng":
             point = pizzacut.Place(coordinate_input=geocode(cs), cs="latlng", verweis=None, typ=None)
         else:
             coords = input("Please input your coordinates: ")
-            if cs.lower() == "u":
+            if "u" in cs.lower():
                 zone = input("please specify zone number and letter: ")
             point = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs,
                                    verweis=None, typ=None)
@@ -75,11 +75,11 @@ def get_input_manually():
             zone = ""
             cs = input("Please choose your input coordinate system for second point of reference (u)tm/(l)atlng or "
                        "type in a placename: ")
-            if cs.lower() != "u" or cs.lower() != "l":
+            if cs.lower() != "u" and cs.lower() != "l" and cs.lower() != "utm" and cs.lower() != "latlng":
                 second = pizzacut.Place(coordinate_input=geocode(cs), cs="latlng", verweis=None, typ=None)
             else:
                 coords = input("Please input your coordinates: ")
-                if cs.lower() == "u":
+                if "u" in cs.lower():
                     zone = input("please specify zone number and letter: ")
                 second = pizzacut.Place(coordinate_input=floating((coords + " " + zone).split()), cs=cs, verweis=1,
                                         typ=None)
@@ -103,12 +103,10 @@ def csv_reader(filepath: str):
     with open(filepath) as file:
         csvreader = csv.DictReader(file)
         read_list = list()
-        j = 0
         for row in csvreader:
-            read_list[j] = pizzacut.Place(cs=row["cs"], coordinate_input=floating(row["coordinates"].split()),
-                                          typ=row["type"], verweis=row["verweis"])
+            read_list.append(pizzacut.Place(cs=row["cs"], coordinate_input=floating(row["coordinates"].split()),
+                                          typ=row["type"], verweis=row["verweis"]))
             print(dict(row))
-            j += 1
         j = 0
         k = len(input_dict)
         while j < len(read_list):
@@ -126,25 +124,29 @@ def csv_writer(filepath: str):
     with open(filepath, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=header)
         writer.writeheader()
-        for i in input_dict:
-            if isinstance(i, tuple):
-                for j in i:
-                    coordinates = str(j.utm["easting"]) + " " + str(j.utm["northing"]) \
-                                  + " " + str(j.utm["zone_numb"]) + " " + str(j.utm["zone_let"])
-                    verweis = j.verweis
-                    row = {'cs': "utm", 'coordinates': coordinates, 'type': str(j.typ), 'verweis': verweis}
+        l = 0
+        while l < len(input_dict):
+            if isinstance(input_dict[l], tuple):
+                j = 0
+                while j < len(input_dict[l]):
+                    coordinates = str(input_dict[l][j].utm["easting"]) + " " + str(input_dict[l][j].utm["northing"]) \
+                                  + " " + str(input_dict[l][j].utm["zone_numb"]) + " " + str(input_dict[l][j].utm["zone_let"])
+                    verweis = input_dict[l][j].verweis
+                    row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[l][j].typ), 'verweis': verweis}
                     writer.writerow(row)
+                    j += 1
             else:
-                coordinates = str(i.utm["easting"]) + " " + str(i.utm["northing"]) \
-                              + " " + str(i.utm["zone_numb"]) + " " + str(i.utm["zone_let"])
-                verweis = ' '.join(str(e) for e in i.verweis)
-                row = {'cs': "utm", 'coordinates': coordinates, 'type': str(i.typ), 'verweis': verweis}
+                coordinates = str(input_dict[l].utm["easting"]) + " " + str(input_dict[l].utm["northing"]) \
+                              + " " + str(input_dict[l].utm["zone_numb"]) + " " + str(input_dict[l].utm["zone_let"])
+                verweis = ' '.join(str(e) for e in input_dict[l].verweis)
+                row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[l].typ), 'verweis': verweis}
                 writer.writerow(row)
+            l += 1
 
 
-def save_polygon(filepath: str, schnittflache):
+def save_polygon(filepath: str, schnittflaeche):
     f = open(filepath, "w")
-    f.write(str(schnittflache))
+    f.write(str(schnittflaeche))
     f.close()
 
 
