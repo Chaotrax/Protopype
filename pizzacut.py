@@ -109,7 +109,6 @@ class Distance(DistanceObject):
         """
 
         newpoints = [(self.coordinates.utm["easting"], self.coordinates.utm["northing"]), ]
-        print(self.direction)
         i = self.direction[0]
         while i <= self.direction[1]:
             easting = self.coordinates.utm["easting"] + self.radius * sympy.cos(i * sympy.pi / 180)
@@ -227,7 +226,6 @@ class Place:
             return verweis_check
         else:
             direct = tuple(verweis_check.split())
-            print(direct)
             if len(direct) == 3:
                 return tuple((direct[0], (int(direct[1]), int(direct[2]))))
             else:

@@ -1,6 +1,3 @@
-# Press Umschalt+F10 to execute it or replace it with your code.
-# import geopandas
-
 import draw
 import pyclipper
 from pyclipper import scale_from_clipper
@@ -146,14 +143,11 @@ def csv_writer(filepath: str):
 
 def save_polygon(filepath: str, schnittflaeche):
     f = open(filepath, "w")
-    f.write(str(schnittflaeche))
+    f.write(str(schnittflaeche[0]) + "Zone: " + str(zone_get.utm["zone_numb"]) + str(zone_get.utm["zone_let"]))
     f.close()
 
 
 def check_intersection(subj, clip):
-    # POLYGONE aufstellen -> näherungsweise bestimmen über Segmente. (wieviele Segmente ist sinnvol? teil von
-    # pizzacut.py als funktion.
-    # xor nutzen für fuzzy angaben (schwankende angaben)
     pc = pyclipper.Pyclipper()
     pc.AddPath(scale_to_clipper(clip), pyclipper.PT_CLIP, True)
     pc.AddPath(scale_to_clipper(subj), pyclipper.PT_SUBJECT, True)
@@ -164,10 +158,19 @@ print("Start by adding your places manually or via CSV-file:")
 while not user_abort:
     get_input()
     schnittflache = check_intersection(shapeList[-1].path, shapeList[0].path)
-    for i in range(len(shapeList) - 1):
-        schnittflache = check_intersection(shapeList[i - 1].path, shapeList[i].path)
-    print("The clipped Polygon is modelled by: \n", schnittflache)
-    draw.draw(shapeList)
+    i = 1
+    while i < len(shapeList):
+        schnittflache = check_intersection(shapeList[i].path, tuple(tuple(sub) for sub in schnittflache[0]))
+        i += 1
+    # for i in range(len(shapeList) - 1):
+    #     schnittflache = check_intersection(shapeList[i - 1].path, shapeList[i].path)
+    print("The clipped Polygon is modelled by: \n", schnittflache[0])
+    if isinstance(input_dict[0], tuple):
+        zone_get = input_dict[0][0]
+    else:
+        zone_get = input_dict[0]
+    draw.draw(shapeList, pizzacut.latlon_conv(tuple(tuple(sub) for sub in schnittflache[0]), zone_get.utm["zone_numb"],
+                                              zone_get.utm["zone_let"]))
     choice = False
     while not choice:
         restart = input("Add (n)ew Points, (s)ave input to CSV, (p)rint Clipped polygon to file or (a)bort?")
@@ -175,7 +178,7 @@ while not user_abort:
             choice = True
             user_abort = True
         elif restart == "s":
-            csv_writer(input("please input desired filename and path: "))
+            csv_writer(input("please input desired filename and path:(../name.csv) "))
         elif restart == "p":
             save_polygon(input("please input desired filename and path: "), schnittflache)
         else:
