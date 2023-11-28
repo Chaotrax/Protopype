@@ -135,7 +135,12 @@ def csv_writer(filepath: str):
             else:
                 coordinates = str(input_dict[l].utm["easting"]) + " " + str(input_dict[l].utm["northing"]) \
                               + " " + str(input_dict[l].utm["zone_numb"]) + " " + str(input_dict[l].utm["zone_let"])
-                verweis = ' '.join(str(e) for e in input_dict[l].verweis)
+                print(input_dict[l].verweis)
+                if isinstance(input_dict[l].verweis[1], tuple):
+                    verweis = str(input_dict[l].verweis[0]) + " " \
+                              + str(input_dict[l].verweis[1][0]) + " " + str(input_dict[l].verweis[1][1])
+                else:
+                    verweis = ' '.join(str(e) for e in input_dict[l].verweis)
                 row = {'cs': "utm", 'coordinates': coordinates, 'type': str(input_dict[l].typ), 'verweis': verweis}
                 writer.writerow(row)
             l += 1
@@ -143,7 +148,9 @@ def csv_writer(filepath: str):
 
 def save_polygon(filepath: str, schnittflaeche):
     f = open(filepath, "w")
-    f.write(str(schnittflaeche[0]) + "Zone: " + str(zone_get.utm["zone_numb"]) + str(zone_get.utm["zone_let"]))
+    f.write("{'type': 'feature',\n'geometry':{\n'type': 'Polygon',\n'coordinates': "
+            + str(schnittflaeche) + "},\n'properties':{ 'Zone': '" + str(zone_get.utm["zone_numb"])
+            + str(zone_get.utm["zone_let"])+"'}}")
     f.close()
 
 
