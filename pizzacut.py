@@ -4,15 +4,8 @@ import utm as utm_lib
 from shapely import Polygon
 
 
-# def create_gdf(geolist: tuple):
-#     gs = geolist[0]
-#     for i in range(len(geolist)):
-#         gs.append(geolist[i + 1])
-#     geopandas.GeoDataFrame(geometry=gs).plot()
-
 def latlon_conv(shapelist, zone, letter):
     newlist = []
-    print(shapelist)
     for i in shapelist:
         newlist.append(utm_lib.to_latlon(int(i[0]), int(i[1]), zone, letter))
     return tuple(newlist)
@@ -20,24 +13,34 @@ def latlon_conv(shapelist, zone, letter):
 
 def switcher_direction(d):
     """
-    chooses corresponding pair of degrees marking the given direction on windrose
+    chooses corresponding pair of degrees marking the given direction on windrose or takes a pair of degrees (tuple)
 
-    :param d: direction in Str
+    :param d: direction in Str or tuple int
     :return: tuple int
     """
     switcher = {
         "süd": (225, 315),
         "süden": (225, 315),
         "south": (225, 315),
+        "südwest": (180, 270),
+        "südost": (270, 360),
+        "southeast": (270, 360),
+        "southwest": (180, 270),
         "north": (45, 135),
         "norden": (45, 135),
         "nord": (45, 135),
+        "nordost": (0, 90),
+        "nordwest": (90, 180),
+        "northwest": (90, 180),
+        "northeast": (0, 90),
         "ost": (315, 405),
         "osten": (315, 405),
         "east": (315, 405),
         "westen": (135, 225),
         "west": (135, 225)
     }
+    if isinstance(d, tuple):
+        return d
     return switcher.get(d.lower(), "keine Himmelsrichtung")
 
 
@@ -90,10 +93,10 @@ class Distance(DistanceObject):
         tuple containing coordinates of the approximation of the generated shape in Latitude and Longitude
     """
 
-    def __init__(self, points, radius: float, direction):
+    def __init__(self, points):
         super().__init__(points)
-        self.direction = switcher_direction(direction)
-        self.radius = radius * 1000
+        self.direction = switcher_direction(self.coordinates.verweis[1])
+        self.radius = float(self.coordinates.verweis[0]) * 1000
         self.path = self.approx_arc()
         self.shape = latlon_conv(self.path, self.coordinates.utm["zone_numb"], self.coordinates.utm["zone_let"])
 
@@ -132,13 +135,14 @@ class Between(DistanceObject):
     shape : tuple
         tuple of coordinates forming the shapeobject with latitude and longitude coordinates
     """
-    def __init__(self, points):
+    def __init__(self, points, width=0.25):
         super().__init__(points)
+        self.width = width
         self.formel = None
-        self.path = self.approx_ellipse()
+        self.path = self.approx_ellipse(self.width)
         self.shape = latlon_conv(self.path, self.coordinates[0].utm["zone_numb"], self.coordinates[0].utm["zone_let"])
 
-    def approx_ellipse(self):
+    def approx_ellipse(self, width):
         """
         Builds a polygon approximating an ellipse by using the distance between both given points
         :return: Tuple of UTM-Coordinates approximating Ellipse
@@ -150,19 +154,19 @@ class Between(DistanceObject):
                                          + (self.coordinates[1].utm["easting"]
                                             - self.coordinates[0].utm["easting"])**2)))
         if self.coordinates[0].utm["northing"] > self.coordinates[1].utm["northing"]:
-            angle = -angle
+            angle = angle * -1
         list_ell = list()
         i = 0
         while i <= 360:
             x = 0.5 * new_radius * sympy.cos(i * sympy.pi / 180)
-            y = 0.25 * new_radius * sympy.sin(i * sympy.pi / 180)
+            y = width * new_radius * sympy.sin(i * sympy.pi / 180)
             easting = x * sympy.cos(angle) - y * sympy.sin(angle) + self.coordinates[0].utm["easting"]
             northing = x * sympy.sin(angle) + y * sympy.cos(angle) + self.coordinates[0].utm["northing"]
             if i == 0:
                 x_origin = easting
                 y_origin = northing
             if angle > 0:
-                if angle < sympy.pi/2:
+                if angle > sympy.pi/2:
                     easting = easting - abs(self.coordinates[0].utm["easting"] - x_origin)
                     northing = northing + abs(self.coordinates[0].utm["northing"] - y_origin)
                 else:
@@ -175,7 +179,6 @@ class Between(DistanceObject):
                 else:
                     easting = easting - abs(self.coordinates[0].utm["easting"] - x_origin)
                     northing = northing - abs(self.coordinates[0].utm["northing"] - y_origin)
-            print(abs(easting), abs(northing))
             list_ell.append((sympy.N(easting),
                              sympy.N(northing)))
             i += 10
@@ -203,17 +206,30 @@ class Place:
         dictionary containing latitude and longitude
     """
 
-    def __init__(self, coordinate_input, name):
-        self.name = name
-        self.input_coordsystem = self.check_coordsystem(coordinate_input)
+    def __init__(self, coordinate_input: tuple, cs: str, typ, verweis):
+        self.typ = typ
+        self.verweis = self.set_verweis(verweis)
+        self.input_coordsystem = self.check_coordsystem(cs.lower())
         self.utm = self.process_utm(coordinate_input)
         self.latlng = self.process_latlng(coordinate_input)
 
-    def check_coordsystem(self, coordinate_input):
-        if len(coordinate_input) > 2:
+    def check_coordsystem(self, cs):
+        if (cs == "u") or (cs == "utm"):
             return "utm"
         else:
             return "latlng"
+
+    def set_verweis(self, verweis_check):
+        if self.typ == "between":
+            return int(verweis_check)
+        elif self.typ is None:
+            return verweis_check
+        else:
+            direct = tuple(verweis_check.split())
+            if len(direct) == 3:
+                return tuple((direct[0], (int(direct[1]), int(direct[2]))))
+            else:
+                return direct
 
     def process_utm(self, coordinate_input):
         """

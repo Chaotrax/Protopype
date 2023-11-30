@@ -1,33 +1,37 @@
-# script that draws the circles
-# ich brauche: alle shapes, koordinaten in latlng, map
+import folium
+from xyzservices import TileProvider
+
+tileprovider = TileProvider(
+    name="Esri Worldimagery",
+    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, "
+                "IGP, UPR-EGP, and the GIS User Community", )
 
 
-import plotly as px
-import numpy as np
-import plotly.graph_objects as go
-
-
-# Draw my sh&t
-def draw(shapelist):
-    longs = []
-    lats = []
-    for i in shapelist:
-        for j in i.shape:
-            longs.append(j[1])
-            lats.append(j[0])
-        longs.append(None)
-        lats.append(None)
-
-    fig = go.Figure(go.Scattermapbox(
-        mode="lines", fill="toself",
-        lon=longs,
-        lat=lats))
-
-    fig.update_layout(
-        mapbox={'style': "stamen-terrain", 'center': {'lon': longs[0], 'lat': lats[0]}, 'zoom': 2},
-        showlegend=False,
-        margin={'l': 0, 'r': 0, 'b': 0, 't': 0})
-
-    fig.show()
-
-
+def draw(shapelist, schnittflaeche):
+    """
+    Draws polygon on map (leaflet), shows result in browser
+    :param shapelist: List of Polygons to be drawn in WGS84 Decimal
+    :param schnittflaeche: Polygon of intersection area
+    """
+    my_map = folium.Map(location=shapelist[0].shape[0], zoom_start=10, tiles=None)
+    folium.TileLayer("OpenStreetMap").add_to(my_map)
+    folium.TileLayer(tileprovider, show=False, name="Esri Worldimagery").add_to(my_map)
+    folium.LayerControl().add_to(my_map)
+    for y in shapelist:
+        locations = y.shape
+        folium.Polygon(
+            locations=locations,
+            fill_opacity=0.15,
+            fill=True,
+        ).add_to(my_map)
+    folium.Polygon(
+        locations=schnittflaeche,
+        color="#ff0000",
+        fill_opacity=0.15,
+        fill=True,
+    ).add_to(my_map)
+    my_map.show_in_browser()
+    save = input("Do you want to save your Result? (y)es/(n)o: ")
+    if "y" in save.lower():
+        my_map.save("result.html")
