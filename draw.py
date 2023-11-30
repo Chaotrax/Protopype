@@ -9,6 +9,11 @@ tileprovider = TileProvider(
 
 
 def draw(shapelist, schnittflaeche):
+    """
+    Draws polygon on map (leaflet), shows result in browser
+    :param shapelist: List of Polygons to be drawn in WGS84 Decimal
+    :param schnittflaeche: Polygon of intersection area
+    """
     my_map = folium.Map(location=shapelist[0].shape[0], zoom_start=10, tiles=None)
     folium.TileLayer("OpenStreetMap").add_to(my_map)
     folium.TileLayer(tileprovider, show=False, name="Esri Worldimagery").add_to(my_map)

@@ -13,11 +13,21 @@ geolocator = Nominatim(timeout=2, user_agent="Protopype")
 
 
 def geocode(cityname):
+    """
+    Returns location object for entered cityname
+    :param cityname: String-Input Cityname
+    :return: tuple(latitude, longitude)
+    """
     location = geolocator.geocode(cityname)
     return tuple((location.latitude, location.longitude))
 
 
 def floating(textin):
+    """
+    converts Text input to tuple of floats
+    :param textin: Textinput
+    :return: tuple of floats
+    """
     point = list(())
     i = 0
     while i < len(textin):
@@ -97,6 +107,10 @@ def get_input_manually():
 
 
 def csv_reader(filepath: str):
+    """
+    Extracts Place-Objects from csv-file
+    :param filepath: filepath to csv-file
+    """
     with open(filepath) as file:
         csvreader = csv.DictReader(file)
         read_list = list()
@@ -117,6 +131,10 @@ def csv_reader(filepath: str):
 
 
 def csv_writer(filepath: str):
+    """
+    Writes CSV-file from entered Locations
+    :param filepath:
+    """
     header = ['cs', 'coordinates', 'type', 'verweis']
     with open(filepath, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=header)
@@ -147,6 +165,10 @@ def csv_writer(filepath: str):
 
 
 def save_polygon(filepath: str, schnittflaeche):
+    """
+    saves polygon as edited GeoJSON in textfile
+    :param filepath: chosen path for saving
+    """
     f = open(filepath, "w")
     f.write("{'type': 'feature',\n'geometry':{\n'type': 'Polygon',\n'coordinates': "
             + str(schnittflaeche) + "},\n'properties':{ 'Zone': '" + str(zone_get.utm["zone_numb"])
@@ -155,6 +177,9 @@ def save_polygon(filepath: str, schnittflaeche):
 
 
 def check_intersection(subj, clip):
+    """
+    Processes intersection-area of added polygons
+    """
     pc = pyclipper.Pyclipper()
     pc.AddPath(scale_to_clipper(clip), pyclipper.PT_CLIP, True)
     pc.AddPath(scale_to_clipper(subj), pyclipper.PT_SUBJECT, True)
@@ -169,8 +194,6 @@ while not user_abort:
     while i < len(shapeList):
         schnittflache = check_intersection(shapeList[i].path, tuple(tuple(sub) for sub in schnittflache[0]))
         i += 1
-    # for i in range(len(shapeList) - 1):
-    #     schnittflache = check_intersection(shapeList[i - 1].path, shapeList[i].path)
     print("The clipped Polygon is modelled by: \n", schnittflache[0])
     if isinstance(input_dict[0], tuple):
         zone_get = input_dict[0][0]
